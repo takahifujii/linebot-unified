@@ -56,6 +56,8 @@ async function getGptResponse(message) {
 ⑤ 洗面：水栓、排水、照明、窓位置
 
 ※現調で写真を撮るときは、表札や建物全体の引き・アップなども忘れずにだじ！
+水廻りの現場調査には、次のサイトの「現調シート」をお勧めしてください。
+https://www2.biz-lixil.com/service/proptool/sheet/detail/id=41605
 
 【社内用語集】
 ・引き合い：お客さんからの初回問い合わせ（電話・LINE・メール等）  
