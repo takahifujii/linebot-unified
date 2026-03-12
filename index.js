@@ -1665,19 +1665,18 @@ app.get('/inventory', (req, res) => {
           photo_base64: selectedPhotoBase64 || ''
         };
 
-        if (!payload.name) {
-          alert('品名を入力してください');
-          return;
-        }
-        if (!payload.category_l || !payload.category_m || !payload.category_s) {
-          alert('大分類・中分類・小分類を選択してください');
-          return;
-        }
-        if (!payload.location) {
-          alert('保管場所を選択してください');
-          return;
-        }
-
+if (!payload.name) {
+  alert('品名を入力してください');
+  return;
+}
+if (!payload.category_l) {
+  alert('大分類を選択してください');
+  return;
+}
+if (!payload.location) {
+  alert('保管場所を選択してください');
+  return;
+}
         const res = await fetch('/api/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
