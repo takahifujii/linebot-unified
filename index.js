@@ -1082,7 +1082,7 @@ app.get('/inventory', (req, res) => {
       modalBody: document.getElementById('modalBody'),
       cameraInput: document.getElementById('cameraInput'),
       photoInput: document.getElementById('photoInput'),
-      photoPreview: document.getElementById('photoPreview'),
+      photoPreview: document.getElementById('photoPreview')
     };
 
     function safeText(v) {
@@ -1099,15 +1099,17 @@ app.get('/inventory', (req, res) => {
     }
 
     function uniqueSorted(list) {
-      return Array.from(new Set(list.map(v => safeText(v).trim()).filter(Boolean)))
-        .sort((a, b) => a.localeCompare(b, 'ja'));
+      return Array.from(new Set(list.map(function(v){ return safeText(v).trim(); }).filter(Boolean)))
+        .sort(function(a, b){ return a.localeCompare(b, 'ja'); });
     }
 
     function setDatalistOptions(id, values) {
       const el = document.getElementById(id);
       if (!el) return;
       el.innerHTML = values
-        .map(v => '<option value="' + escapeHtml(v) + '"></option>')
+        .map(function(v){
+          return '<option value="' + escapeHtml(v) + '"></option>';
+        })
         .join('');
     }
 
@@ -1115,7 +1117,7 @@ app.get('/inventory', (req, res) => {
       const raw = safeText(url).trim();
       if (!raw) return '';
 
-      const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
+      const fileMatch = raw.match(/\\/file\\/d\\/([^/]+)/);
       if (fileMatch && fileMatch[1]) return fileMatch[1];
 
       const idMatch = raw.match(/[?&]id=([^&]+)/);
@@ -1142,7 +1144,7 @@ app.get('/inventory', (req, res) => {
       if (!item.photo_urls) return [];
       return safeText(item.photo_urls)
         .split(',')
-        .map(v => v.trim())
+        .map(function(v){ return v.trim(); })
         .filter(Boolean);
     }
 
@@ -1158,11 +1160,11 @@ app.get('/inventory', (req, res) => {
       const cats = Array.from(
         new Set(
           items
-            .map(i => safeText(i.category_l).trim())
+            .map(function(i){ return safeText(i.category_l).trim(); })
             .filter(Boolean)
         )
       );
-      cats.sort((a, b) => a.localeCompare(b, 'ja'));
+      cats.sort(function(a, b){ return a.localeCompare(b, 'ja'); });
       return cats;
     }
 
@@ -1170,24 +1172,22 @@ app.get('/inventory', (req, res) => {
       const cats = Array.from(
         new Set(
           items
-            .filter(i => safeText(i.category_l).trim() === mainCategory)
-            .map(i => safeText(i.category_m).trim())
+            .filter(function(i){ return safeText(i.category_l).trim() === mainCategory; })
+            .map(function(i){ return safeText(i.category_m).trim(); })
             .filter(Boolean)
         )
       );
-      cats.sort((a, b) => a.localeCompare(b, 'ja'));
+      cats.sort(function(a, b){ return a.localeCompare(b, 'ja'); });
       return cats;
     }
 
     function refreshFormDatalists() {
-      const l = uniqueSorted(allItems.map(i => i.category_l));
-      const m = uniqueSorted(allItems.map(i => i.category_m));
-      const s = uniqueSorted(allItems.map(i => i.category_s));
-      const locations = uniqueSorted([
-        ...FIXED_LOCATIONS,
-        ...(masterData.locations || []),
-        ...allItems.map(i => i.location)
-      ]);
+      const l = uniqueSorted(allItems.map(function(i){ return i.category_l; }));
+      const m = uniqueSorted(allItems.map(function(i){ return i.category_m; }));
+      const s = uniqueSorted(allItems.map(function(i){ return i.category_s; }));
+      const locations = uniqueSorted(
+        FIXED_LOCATIONS.concat(masterData.locations || []).concat(allItems.map(function(i){ return i.location; }))
+      );
 
       setDatalistOptions('category_l_list', l);
       setDatalistOptions('category_m_list', m);
@@ -1197,9 +1197,11 @@ app.get('/inventory', (req, res) => {
 
     function sortItems(items) {
       if (activeMainTab === 'new') {
-        return [...items].sort((a, b) => getNewestTimestamp(b) - getNewestTimestamp(a));
+        return [].concat(items).sort(function(a, b){
+          return getNewestTimestamp(b) - getNewestTimestamp(a);
+        });
       }
-      return [...items].sort((a, b) => {
+      return [].concat(items).sort(function(a, b){
         const an = safeText(a.name);
         const bn = safeText(b.name);
         return an.localeCompare(bn, 'ja');
@@ -1230,9 +1232,9 @@ app.get('/inventory', (req, res) => {
     }
 
     function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
+      return new Promise(function(resolve, reject) {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
+        reader.onload = function(){ resolve(reader.result); };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
@@ -1246,27 +1248,31 @@ app.get('/inventory', (req, res) => {
 
     function filterItems() {
       const q = safeText(els.searchInput.value).trim().toLowerCase();
-      let items = [...allItems];
+      let items = [].concat(allItems);
 
       if (activeMainTab !== 'all' && activeMainTab !== 'new') {
-        items = items.filter(i => safeText(i.category_l).trim() === activeMainTab);
+        items = items.filter(function(i){
+          return safeText(i.category_l).trim() === activeMainTab;
+        });
       }
 
       if (activeSubTab !== 'all' && activeMainTab !== 'all' && activeMainTab !== 'new') {
-        items = items.filter(i => safeText(i.category_m).trim() === activeSubTab);
+        items = items.filter(function(i){
+          return safeText(i.category_m).trim() === activeSubTab;
+        });
       }
 
       if (q) {
-        items = items.filter(i => {
+        items = items.filter(function(i){
           const hay = [
             i.name,
             i.category_l,
             i.category_m,
             i.category_s,
             i.location,
-            i.status,
+            i.status
           ]
-            .map(v => safeText(v).toLowerCase())
+            .map(function(v){ return safeText(v).toLowerCase(); })
             .join(' ');
           return hay.includes(q);
         });
@@ -1280,18 +1286,17 @@ app.get('/inventory', (req, res) => {
 
     function renderMainTabs() {
       const categories = getMainCategories(allItems);
-      const tabs = [
-        { key: 'all', label: '在庫一覧' },
-        { key: 'new', label: '新着' },
-        ...categories.map(c => ({ key: c, label: c })),
-      ];
+      const tabs = [{ key: 'all', label: '在庫一覧' }, { key: 'new', label: '新着' }]
+        .concat(categories.map(function(c){ return { key: c, label: c }; }));
 
       els.mainTabs.innerHTML = tabs
-        .map(tab => `
-          <button class="tab ${tab.key === activeMainTab ? 'active' : ''}" onclick="setMainTab('${escapeHtml(tab.key)}')">
-            ${escapeHtml(tab.label)}
-          </button>
-        `)
+        .map(function(tab) {
+          return '<button class="tab ' +
+            (tab.key === activeMainTab ? 'active' : '') +
+            '" onclick="setMainTab(\\'' + escapeHtml(tab.key) + '\\')">' +
+            escapeHtml(tab.label) +
+            '</button>';
+        })
         .join('');
     }
 
@@ -1310,33 +1315,36 @@ app.get('/inventory', (req, res) => {
       }
 
       els.subTabs.style.display = 'flex';
-      els.subTabs.innerHTML = [
-        `<button class="subtab ${activeSubTab === 'all' ? 'active' : ''}" onclick="setSubTab('all')">すべて</button>`,
-        ...subCategories.map(c => `
-          <button class="subtab ${c === activeSubTab ? 'active' : ''}" onclick="setSubTab('${escapeHtml(c)}')">
-            ${escapeHtml(c)}
-          </button>
-        `)
-      ].join('');
+
+      const buttons = [
+        '<button class="subtab ' + (activeSubTab === 'all' ? 'active' : '') + '" onclick="setSubTab(\\'all\\')">すべて</button>'
+      ].concat(
+        subCategories.map(function(c){
+          return '<button class="subtab ' + (c === activeSubTab ? 'active' : '') +
+            '" onclick="setSubTab(\\'' + escapeHtml(c) + '\\')">' +
+            escapeHtml(c) +
+            '</button>';
+        })
+      );
+
+      els.subTabs.innerHTML = buttons.join('');
     }
 
     function renderSummary(items) {
       els.summaryCount.textContent = String(items.length);
-      const totalQty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+      const totalQty = items.reduce(function(sum, item){
+        return sum + Number(item.qty || 0);
+      }, 0);
       els.summaryQty.textContent = String(totalQty);
     }
 
     function renderItems() {
       if (!filteredItems.length) {
-        els.itemsContainer.innerHTML = `
-          <div class="empty">
-            条件に合う在庫がありません。
-          </div>
-        `;
+        els.itemsContainer.innerHTML = '<div class="empty">条件に合う在庫がありません。</div>';
         return;
       }
 
-      els.itemsContainer.innerHTML = filteredItems.map(item => {
+      els.itemsContainer.innerHTML = filteredItems.map(function(item) {
         const photos = getPhotoUrls(item);
 
         let thumb = '画像なし';
@@ -1346,65 +1354,48 @@ app.get('/inventory', (req, res) => {
           const c1 = escapeHtml(candidates[1] || '');
           const c2 = escapeHtml(candidates[2] || '');
 
-          thumb = `
-            <img
-              src="${c0}"
-              alt="${escapeHtml(item.name || '')}"
-              onerror="
-                if (!this.dataset.f1 && '${c1}') {
-                  this.dataset.f1='1';
-                  this.src='${c1}';
-                  return;
-                }
-                if (!this.dataset.f2 && '${c2}') {
-                  this.dataset.f2='1';
-                  this.src='${c2}';
-                  return;
-                }
-                this.onerror=null;
-                this.outerHTML='<span>画像なし</span>';
-              "
-            />
-          `;
+          thumb = '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
+            ' onerror="if (!this.dataset.f1 && \\'' + c1 + '\\') { this.dataset.f1=\\'1\\'; this.src=\\'' + c1 + '\\'; return; }' +
+            ' if (!this.dataset.f2 && \\'' + c2 + '\\') { this.dataset.f2=\\'1\\'; this.src=\\'' + c2 + '\\'; return; }' +
+            ' this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
+            ' />';
         }
 
         const chips = [
           item.category_l,
           item.category_m,
           item.category_s,
-          item.location,
+          item.location
         ]
-          .map(v => safeText(v).trim())
+          .map(function(v){ return safeText(v).trim(); })
           .filter(Boolean)
-          .map(v => `<span class="chip">${escapeHtml(v)}</span>`)
+          .map(function(v){
+            return '<span class="chip">' + escapeHtml(v) + '</span>';
+          })
           .join('');
 
         const statusText = safeText(item.status);
         const statusClass = statusText === 'out' ? 'status-out' : '';
 
-        return `
-          <div class="item-card">
-            <div class="thumb-box">${thumb}</div>
-            <div class="item-main">
-              <div class="item-name">${escapeHtml(item.name || '')}</div>
-              <div class="item-meta ${statusClass}">
-                状態: ${escapeHtml(statusText || '')}
-              </div>
-              <div class="chips">${chips}</div>
-              <div class="item-bottom">
-                <div class="qty-box">
-                  <span class="qty-num">${escapeHtml(item.qty || 0)}</span>
-                  <span class="qty-unit">${escapeHtml(item.unit || '')}</span>
-                </div>
-                <div class="item-actions">
-                  <button class="btn btn-secondary" onclick="openEditModal('${escapeHtml(item.item_id)}')">編集</button>
-                  <button class="btn btn-primary" onclick="openConsumeModal('${escapeHtml(item.item_id)}')">消費</button>
-                  <button class="btn btn-danger" onclick="archiveItem('${escapeHtml(item.item_id)}','${escapeHtml(item.name || '')}')">整理</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        return '<div class="item-card">' +
+          '<div class="thumb-box">' + thumb + '</div>' +
+          '<div class="item-main">' +
+            '<div class="item-name">' + escapeHtml(item.name || '') + '</div>' +
+            '<div class="item-meta ' + statusClass + '">状態: ' + escapeHtml(statusText || '') + '</div>' +
+            '<div class="chips">' + chips + '</div>' +
+            '<div class="item-bottom">' +
+              '<div class="qty-box">' +
+                '<span class="qty-num">' + escapeHtml(item.qty || 0) + '</span>' +
+                '<span class="qty-unit">' + escapeHtml(item.unit || '') + '</span>' +
+              '</div>' +
+              '<div class="item-actions">' +
+                '<button class="btn btn-secondary" onclick="openEditModal(\\'' + escapeHtml(item.item_id) + '\\')">編集</button>' +
+                '<button class="btn btn-primary" onclick="openConsumeModal(\\'' + escapeHtml(item.item_id) + '\\')">消費</button>' +
+                '<button class="btn btn-danger" onclick="archiveItem(\\'' + escapeHtml(item.item_id) + '\\',\\'' + escapeHtml(item.name || '') + '\\')">整理</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
       }).join('');
     }
 
@@ -1449,22 +1440,22 @@ app.get('/inventory', (req, res) => {
     }
 
     async function loadItems() {
-      const [itemsRes, masterRes] = await Promise.all([
+      const responses = await Promise.all([
         fetch('/api/items'),
         fetch('/api/master')
       ]);
 
-      const itemsData = await itemsRes.json();
-      const masterJson = await masterRes.json();
+      const itemsData = await responses[0].json();
+      const masterJson = await responses[1].json();
 
       if (!Array.isArray(itemsData)) {
-        throw new Error(itemsData?.error || '在庫データの取得に失敗しました');
+        throw new Error(itemsData && itemsData.error ? itemsData.error : '在庫データの取得に失敗しました');
       }
 
       allItems = itemsData;
       masterData = {
-        categories: Array.isArray(masterJson?.categories) ? masterJson.categories : [],
-        locations: Array.isArray(masterJson?.locations) ? masterJson.locations : []
+        categories: Array.isArray(masterJson && masterJson.categories) ? masterJson.categories : [],
+        locations: Array.isArray(masterJson && masterJson.locations) ? masterJson.locations : []
       };
 
       refreshFormDatalists();
@@ -1551,83 +1542,69 @@ app.get('/inventory', (req, res) => {
           const c1 = escapeHtml(candidates[1] || '');
           const c2 = escapeHtml(candidates[2] || '');
 
-          preview = `
-            <div class="photo-preview" style="margin-bottom:12px;">
-              <img
-                src="${c0}"
-                alt=""
-                onerror="
-                  if (!this.dataset.f1 && '${c1}') {
-                    this.dataset.f1='1';
-                    this.src='${c1}';
-                    return;
-                  }
-                  if (!this.dataset.f2 && '${c2}') {
-                    this.dataset.f2='1';
-                    this.src='${c2}';
-                    return;
-                  }
-                  this.onerror=null;
-                  this.outerHTML='<span>画像なし</span>';
-                "
-              />
-            </div>
-          `;
+          preview = '<div class="photo-preview" style="margin-bottom:12px;">' +
+            '<img src="' + c0 + '" alt=""' +
+            ' onerror="if (!this.dataset.f1 && \\'' + c1 + '\\') { this.dataset.f1=\\'1\\'; this.src=\\'' + c1 + '\\'; return; }' +
+            ' if (!this.dataset.f2 && \\'' + c2 + '\\') { this.dataset.f2=\\'1\\'; this.src=\\'' + c2 + '\\'; return; }' +
+            ' this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
+            ' />' +
+          '</div>';
         }
 
-        openModal('在庫を編集', `
-          ${preview}
-          <div class="grid-2">
-            <div class="field">
-              <label>品名</label>
-              <input id="edit_name" value="${escapeHtml(item.name || '')}" />
-            </div>
-            <div class="field">
-              <label>保管場所</label>
-              <input id="edit_location" list="location_list" value="${escapeHtml(item.location || '')}" />
-            </div>
-          </div>
+        const html =
+          preview +
+          '<div class="grid-2">' +
+            '<div class="field">' +
+              '<label>品名</label>' +
+              '<input id="edit_name" value="' + escapeHtml(item.name || '') + '" />' +
+            '</div>' +
+            '<div class="field">' +
+              '<label>保管場所</label>' +
+              '<input id="edit_location" list="location_list" value="' + escapeHtml(item.location || '') + '" />' +
+            '</div>' +
+          '</div>' +
 
-          <div class="grid-2">
-            <div class="field">
-              <label>大カテゴリ</label>
-              <input id="edit_category_l" list="category_l_list" value="${escapeHtml(item.category_l || '')}" />
-            </div>
-            <div class="field">
-              <label>中カテゴリ</label>
-              <input id="edit_category_m" list="category_m_list" value="${escapeHtml(item.category_m || '')}" />
-            </div>
-          </div>
+          '<div class="grid-2">' +
+            '<div class="field">' +
+              '<label>大カテゴリ</label>' +
+              '<input id="edit_category_l" list="category_l_list" value="' + escapeHtml(item.category_l || '') + '" />' +
+            '</div>' +
+            '<div class="field">' +
+              '<label>中カテゴリ</label>' +
+              '<input id="edit_category_m" list="category_m_list" value="' + escapeHtml(item.category_m || '') + '" />' +
+            '</div>' +
+          '</div>' +
 
-          <div class="grid-2">
-            <div class="field">
-              <label>小カテゴリ</label>
-              <input id="edit_category_s" list="category_s_list" value="${escapeHtml(item.category_s || '')}" />
-            </div>
-            <div class="field">
-              <label>単位</label>
-              <input id="edit_unit" value="${escapeHtml(item.unit || '個')}" />
-            </div>
-          </div>
+          '<div class="grid-2">' +
+            '<div class="field">' +
+              '<label>小カテゴリ</label>' +
+              '<input id="edit_category_s" list="category_s_list" value="' + escapeHtml(item.category_s || '') + '" />' +
+            '</div>' +
+            '<div class="field">' +
+              '<label>単位</label>' +
+              '<input id="edit_unit" value="' + escapeHtml(item.unit || '個') + '" />' +
+            '</div>' +
+          '</div>' +
 
-          <div class="grid-2">
-            <div class="field">
-              <label>しきい値</label>
-              <input id="edit_threshold" type="number" value="${escapeHtml(item.threshold ?? '')}" />
-            </div>
-            <div class="field">
-              <label>担当者</label>
-              <input id="edit_user" placeholder="例: 藤井" />
-            </div>
-          </div>
+          '<div class="grid-2">' +
+            '<div class="field">' +
+              '<label>しきい値</label>' +
+              '<input id="edit_threshold" type="number" value="' + escapeHtml(item.threshold ?? '') + '" />' +
+            '</div>' +
+            '<div class="field">' +
+              '<label>担当者</label>' +
+              '<input id="edit_user" placeholder="例: 藤井" />' +
+            '</div>' +
+          '</div>' +
 
-          <div class="field">
-            <label>メモ</label>
-            <input id="edit_note" placeholder="例: 置き場変更" value="在庫情報更新" />
-          </div>
+          '<div class="field">' +
+            '<label>メモ</label>' +
+            '<input id="edit_note" placeholder="例: 置き場変更" value="在庫情報更新" />' +
+          '</div>' +
 
-          <button class="btn btn-primary" style="width:100%;" onclick="submitEdit()">更新する</button>
-        `);
+          '<button class="btn btn-primary" style="width:100%;" onclick="submitEdit()">更新する</button>';
+
+        openModal('在庫を編集', html);
       } catch (err) {
         alert(err.message || '編集情報の取得に失敗しました');
       }
@@ -1667,30 +1644,33 @@ app.get('/inventory', (req, res) => {
     }
 
     async function openConsumeModal(itemId) {
-      const item = allItems.find(i => safeText(i.item_id) === safeText(itemId));
+      const item = allItems.find(function(i){
+        return safeText(i.item_id) === safeText(itemId);
+      });
       const itemName = item ? safeText(item.name) : '';
 
-      openModal('在庫を消費', `
-        <div class="field">
-          <label>対象</label>
-          <input value="${escapeHtml(itemName)}" disabled />
-        </div>
-        <div class="grid-2">
-          <div class="field">
-            <label>消費数</label>
-            <input id="consume_qty" type="number" value="1" />
-          </div>
-          <div class="field">
-            <label>担当者</label>
-            <input id="consume_user" placeholder="例: 藤井" />
-          </div>
-        </div>
-        <div class="field">
-          <label>メモ</label>
-          <input id="consume_note" value="使用・消費" />
-        </div>
-        <button class="btn btn-primary" style="width:100%;" onclick="submitConsume('${escapeHtml(itemId)}')">消費する</button>
-      `);
+      const html =
+        '<div class="field">' +
+          '<label>対象</label>' +
+          '<input value="' + escapeHtml(itemName) + '" disabled />' +
+        '</div>' +
+        '<div class="grid-2">' +
+          '<div class="field">' +
+            '<label>消費数</label>' +
+            '<input id="consume_qty" type="number" value="1" />' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>担当者</label>' +
+            '<input id="consume_user" placeholder="例: 藤井" />' +
+          '</div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>メモ</label>' +
+          '<input id="consume_note" value="使用・消費" />' +
+        '</div>' +
+        '<button class="btn btn-primary" style="width:100%;" onclick="submitConsume(\\'' + escapeHtml(itemId) + '\\')">消費する</button>';
+
+      openModal('在庫を消費', html);
     }
 
     async function submitConsume(itemId) {
@@ -1738,8 +1718,8 @@ app.get('/inventory', (req, res) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             item_id: itemId,
-            user,
-            note
+            user: user,
+            note: note
           })
         });
 
@@ -1754,17 +1734,17 @@ app.get('/inventory', (req, res) => {
       }
     }
 
-    els.searchInput.addEventListener('input', () => {
+    els.searchInput.addEventListener('input', function() {
       filterItems();
     });
 
-    els.modalBackdrop.addEventListener('click', (e) => {
+    els.modalBackdrop.addEventListener('click', function(e) {
       if (e.target === els.modalBackdrop) {
         closeModal();
       }
     });
 
-    els.cameraInput.addEventListener('change', async (e) => {
+    els.cameraInput.addEventListener('change', async function(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       try {
@@ -1774,7 +1754,7 @@ app.get('/inventory', (req, res) => {
       }
     });
 
-    els.photoInput.addEventListener('change', async (e) => {
+    els.photoInput.addEventListener('change', async function(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       try {
@@ -1789,7 +1769,10 @@ app.get('/inventory', (req, res) => {
         renderPhotoPreview();
         await loadItems();
       } catch (err) {
-        els.itemsContainer.innerHTML = `<div class="empty">読み込みに失敗しました<br>${escapeHtml(err.message || '')}</div>`;
+        els.itemsContainer.innerHTML =
+          '<div class="empty">読み込みに失敗しました<br>' +
+          escapeHtml(err.message || '') +
+          '</div>';
       }
     }
 
@@ -1814,40 +1797,4 @@ app.get('/inventory', (req, res) => {
 </body>
 </html>
   `);
-});
-
-// ------------------------------------------
-// root / health / logtest
-// ------------------------------------------
-app.get('/', (req, res) => {
-  res.send(`
-    <h1>Hello World from LINE GPT Bot + Inventory App!</h1>
-    <ul>
-      <li><a href="/inventory">/inventory</a> 在庫管理画面</li>
-      <li><a href="/health">/health</a> ヘルスチェック</li>
-      <li><a href="/logtest">/logtest</a> ログテスト</li>
-    </ul>
-  `);
-});
-
-app.get('/health', (req, res) => {
-  res.json({
-    ok: true,
-    service: 'linebot-inventory-unified',
-    inventoryApiConfigured: !!INVENTORY_API_URL && !!INVENTORY_API_TOKEN,
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/logtest', (req, res) => {
-  console.log('🧪 ログ出力テスト成功！');
-  res.send('ログ出力したよ！');
-});
-
-// ------------------------------------------
-// ポート
-// ------------------------------------------
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
 });
