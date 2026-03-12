@@ -99,7 +99,6 @@ async function callInventoryPost(action, payload = {}) {
 
   return response.data;
 }
-
 function unwrapGasResponse(gasResponse) {
   if (!gasResponse) {
     throw new Error('GASから応答がありません');
