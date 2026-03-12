@@ -417,7 +417,6 @@ app.get('/inventory', (req, res) => {
       --muted:#7b8397;
       --line:#e6e8f0;
       --primary:#6c63ff;
-      --primary2:#8a84ff;
       --danger:#ff6b6b;
       --shadow:0 10px 24px rgba(39,47,89,0.08);
     }
@@ -429,13 +428,14 @@ app.get('/inventory', (req, res) => {
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
     }
-    body{ padding-bottom:90px; }
+    body{ padding-bottom:84px; }
     .app{
       max-width:720px;
       margin:0 auto;
       min-height:100vh;
       background:var(--bg);
     }
+
     .topbar{
       position:sticky;
       top:0;
@@ -453,8 +453,15 @@ app.get('/inventory', (req, res) => {
       justify-content:space-between;
       gap:12px;
     }
-    .title{ font-size:22px; font-weight:800; }
-    .title-sub{ margin-top:4px; font-size:12px; opacity:0.88; }
+    .title{
+      font-size:22px;
+      font-weight:800;
+    }
+    .title-sub{
+      margin-top:4px;
+      font-size:12px;
+      opacity:0.88;
+    }
     .icon-btn{
       border:none;
       background:rgba(255,255,255,0.16);
@@ -466,7 +473,9 @@ app.get('/inventory', (req, res) => {
       min-width:54px;
     }
 
-    .content{ padding:14px 14px 0; }
+    .content{
+      padding:14px;
+    }
 
     .search-card{
       margin-top:-22px;
@@ -474,7 +483,7 @@ app.get('/inventory', (req, res) => {
       border-radius:18px;
       box-shadow:var(--shadow);
       padding:14px;
-      margin-bottom:14px;
+      margin-bottom:12px;
     }
     .search-input{
       width:100%;
@@ -485,17 +494,6 @@ app.get('/inventory', (req, res) => {
       outline:none;
       background:#fff;
     }
-
-    .summary{ display:flex; gap:10px; margin-bottom:14px; }
-    .summary-card{
-      flex:1;
-      background:var(--card);
-      border-radius:16px;
-      padding:14px 12px;
-      box-shadow:var(--shadow);
-    }
-    .summary-label{ font-size:12px; color:var(--muted); margin-bottom:4px; }
-    .summary-value{ font-size:24px; font-weight:800; line-height:1; }
 
     .tabs-wrap{
       overflow-x:auto;
@@ -520,7 +518,6 @@ app.get('/inventory', (req, res) => {
       font-size:14px;
       white-space:nowrap;
       cursor:pointer;
-      box-shadow:0 2px 6px rgba(0,0,0,0.02);
     }
     .tab.active{
       background:var(--primary);
@@ -529,9 +526,14 @@ app.get('/inventory', (req, res) => {
       box-shadow:0 8px 16px rgba(108,99,255,0.22);
     }
 
-    .screen{ display:block; }
+    .screen{ display:none; }
+    .screen.active{ display:block; }
 
-    .items{ display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+    .items{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
 
     .item-card{
       background:var(--card);
@@ -543,9 +545,9 @@ app.get('/inventory', (req, res) => {
       align-items:flex-start;
     }
     .thumb-box{
-      width:96px;
-      min-width:96px;
-      height:96px;
+      width:92px;
+      min-width:92px;
+      height:92px;
       border-radius:16px;
       overflow:hidden;
       background:#eceff8;
@@ -562,8 +564,10 @@ app.get('/inventory', (req, res) => {
       object-fit:cover;
       display:block;
     }
-
-    .item-main{ flex:1; min-width:0; }
+    .item-main{
+      flex:1;
+      min-width:0;
+    }
     .item-name{
       font-size:17px;
       font-weight:800;
@@ -571,8 +575,17 @@ app.get('/inventory', (req, res) => {
       line-height:1.35;
       word-break:break-word;
     }
-    .item-meta{ font-size:12px; color:var(--muted); margin-bottom:8px; }
-    .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+    .item-meta{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-bottom:10px;
+    }
     .chip{
       background:#f2f4fb;
       border-radius:999px;
@@ -587,9 +600,46 @@ app.get('/inventory', (req, res) => {
       gap:10px;
       flex-wrap:wrap;
     }
-    .qty-box{ display:flex; align-items:baseline; gap:4px; color:var(--primary); }
-    .qty-num{ font-size:28px; font-weight:800; line-height:1; }
-    .qty-unit{ font-size:14px; font-weight:700; }
+    .qty-box{
+      display:flex;
+      align-items:baseline;
+      gap:4px;
+      color:var(--primary);
+    }
+    .qty-num{
+      font-size:28px;
+      font-weight:800;
+      line-height:1;
+    }
+    .qty-unit{
+      font-size:14px;
+      font-weight:700;
+    }
+    .item-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:700;
+    }
+    .btn-secondary{
+      background:#eef0f7;
+      color:#3c455a;
+    }
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+    }
+    .btn-danger{
+      background:#fff1f1;
+      color:#d94b4b;
+    }
 
     .empty{
       text-align:center;
@@ -605,11 +655,20 @@ app.get('/inventory', (req, res) => {
       border-radius:20px;
       padding:16px;
       box-shadow:var(--shadow);
-      margin-bottom:14px;
     }
-    .form-title{ font-size:18px; font-weight:800; margin-bottom:12px; }
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .field{ margin-bottom:10px; }
+    .form-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:12px;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .field{
+      margin-bottom:10px;
+    }
     .field label{
       display:block;
       font-size:12px;
@@ -618,8 +677,7 @@ app.get('/inventory', (req, res) => {
       font-weight:700;
     }
     .field input,
-    .field select,
-    .field textarea{
+    .field select{
       width:100%;
       border:1px solid var(--line);
       border-radius:14px;
@@ -638,7 +696,10 @@ app.get('/inventory', (req, res) => {
       background:#f7f8fc;
       margin-bottom:14px;
     }
-    .toggle-row input{ width:auto; transform:scale(1.15); }
+    .toggle-row input{
+      width:auto;
+      transform:scale(1.15);
+    }
 
     .photo-picker{
       margin-bottom:14px;
@@ -653,22 +714,15 @@ app.get('/inventory', (req, res) => {
       flex-wrap:wrap;
       margin-bottom:10px;
     }
-    .photo-btn,.btn{
+    .photo-btn{
       border:none;
       border-radius:12px;
       padding:10px 14px;
       cursor:pointer;
       font-size:14px;
       font-weight:700;
-    }
-    .photo-btn{
       background:#eef0ff;
       color:#454ca5;
-    }
-    .btn-primary{
-      background:var(--primary);
-      color:#fff;
-      width:100%;
     }
     .photo-preview{
       width:100%;
@@ -690,11 +744,81 @@ app.get('/inventory', (req, res) => {
       display:block;
     }
 
-    .bottom-space{ height:18px; }
+    .bottom-nav{
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:0;
+      width:100%;
+      max-width:720px;
+      background:#fff;
+      border-top:1px solid var(--line);
+      display:flex;
+      justify-content:space-around;
+      padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+      z-index:25;
+      box-shadow:0 -8px 20px rgba(18,28,45,0.06);
+    }
+    .nav-btn{
+      border:none;
+      background:none;
+      color:#70788d;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      padding:8px 12px;
+      border-radius:12px;
+      min-width:110px;
+    }
+    .nav-btn.active{
+      color:var(--primary);
+      background:#f0f1ff;
+    }
+
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(20,24,42,0.45);
+      display:none;
+      align-items:flex-end;
+      z-index:40;
+    }
+    .modal-backdrop.show{ display:flex; }
+    .modal{
+      width:100%;
+      max-width:720px;
+      margin:0 auto;
+      background:#fff;
+      border-top-left-radius:22px;
+      border-top-right-radius:22px;
+      padding:18px 16px 24px;
+      max-height:88vh;
+      overflow:auto;
+      box-shadow:0 -8px 24px rgba(0,0,0,0.16);
+    }
+    .modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .modal-title{
+      font-size:18px;
+      font-weight:800;
+    }
+    .close-btn{
+      border:none;
+      background:#f2f4f8;
+      color:#4d5568;
+      border-radius:999px;
+      padding:8px 12px;
+      cursor:pointer;
+      font-weight:700;
+    }
 
     @media (max-width:520px){
       .grid-2{ grid-template-columns:1fr; }
-      .summary{ flex-direction:column; }
       .thumb-box{ width:82px; min-width:82px; height:82px; }
       .item-name{ font-size:16px; }
       .qty-num{ font-size:26px; }
@@ -718,108 +842,114 @@ app.get('/inventory', (req, res) => {
         <input id="searchInput" class="search-input" placeholder="品名・カテゴリ・場所で検索" />
       </div>
 
-      <div class="summary">
-        <div class="summary-card">
-          <div class="summary-label">在庫アイテム数</div>
-          <div class="summary-value" id="summaryCount">0</div>
-        </div>
-        <div class="summary-card">
-          <div class="summary-label">在庫合計数量</div>
-          <div class="summary-value" id="summaryQty">0</div>
-        </div>
-      </div>
-
       <div class="tabs-wrap">
         <div class="tabs" id="mainTabs"></div>
       </div>
 
-      <div class="items" id="itemsContainer"></div>
-
-      <div class="form-card">
-        <div class="form-title">新規登録</div>
-
-        <div class="photo-picker">
-          <div class="photo-actions">
-            <button type="button" class="photo-btn" id="cameraBtn">カメラ起動</button>
-            <button type="button" class="photo-btn" id="photoBtn">写真を選ぶ</button>
-            <button type="button" class="photo-btn" id="clearPhotoBtn">写真を消す</button>
-          </div>
-
-          <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none;" />
-          <input id="photoInput" type="file" accept="image/*" style="display:none;" />
-
-          <div class="photo-preview" id="photoPreview">写真未選択</div>
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label>品名</label>
-            <input id="name" placeholder="例: 給湯器リモコン" />
-          </div>
-          <div class="field">
-            <label>保管場所</label>
-            <select id="locationSelect"></select>
-          </div>
-        </div>
-
-        <div class="field" id="locationOtherWrap" style="display:none;">
-          <label>保管場所（手入力）</label>
-          <input id="locationOther" placeholder="新しい保管場所を入力" />
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label>大カテゴリ</label>
-            <select id="category_l"></select>
-          </div>
-          <div class="field">
-            <label>中カテゴリ</label>
-            <select id="category_m"></select>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label>小カテゴリ</label>
-            <select id="category_s"></select>
-          </div>
-          <div class="field">
-            <label>数量</label>
-            <input id="qty" type="number" value="1" />
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label>単位</label>
-            <input id="unit" value="個" />
-          </div>
-          <div class="field">
-            <label>しきい値</label>
-            <input id="threshold" type="number" value="0" />
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="field">
-            <label>登録者</label>
-            <input id="user" placeholder="例: 藤井" />
-          </div>
-          <div class="field">
-            <label>メモ</label>
-            <input id="note" placeholder="例: まとめ買い" />
-          </div>
-        </div>
-
-        <div class="toggle-row">
-          <input id="addIfSameName" type="checkbox" checked />
-          <label for="addIfSameName" style="margin:0; font-size:14px; color:#445; font-weight:700;">同名があれば加算する</label>
-        </div>
-
-        <button class="btn btn-primary" id="createBtn">登録する</button>
+      <div class="screen active" id="screenList">
+        <div class="items" id="itemsContainer"></div>
       </div>
 
-      <div class="bottom-space"></div>
+      <div class="screen" id="screenCreate">
+        <div class="form-card">
+          <div class="form-title">新規登録</div>
+
+          <div class="photo-picker">
+            <div class="photo-actions">
+              <button type="button" class="photo-btn" id="cameraBtn">カメラ起動</button>
+              <button type="button" class="photo-btn" id="photoBtn">写真を選ぶ</button>
+              <button type="button" class="photo-btn" id="clearPhotoBtn">写真を消す</button>
+            </div>
+
+            <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none;" />
+            <input id="photoInput" type="file" accept="image/*" style="display:none;" />
+
+            <div class="photo-preview" id="photoPreview">写真未選択</div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>品名</label>
+              <input id="name" placeholder="例: 給湯器リモコン" />
+            </div>
+            <div class="field">
+              <label>保管場所</label>
+              <select id="locationSelect"></select>
+            </div>
+          </div>
+
+          <div class="field" id="locationOtherWrap" style="display:none;">
+            <label>保管場所（手入力）</label>
+            <input id="locationOther" placeholder="新しい保管場所を入力" />
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>大カテゴリ</label>
+              <select id="category_l"></select>
+            </div>
+            <div class="field">
+              <label>中カテゴリ</label>
+              <select id="category_m"></select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>小カテゴリ</label>
+              <select id="category_s"></select>
+            </div>
+            <div class="field">
+              <label>数量</label>
+              <input id="qty" type="number" value="1" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>単位</label>
+              <input id="unit" value="個" />
+            </div>
+            <div class="field">
+              <label>しきい値</label>
+              <input id="threshold" type="number" value="0" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="field">
+              <label>登録者</label>
+              <input id="user" placeholder="例: 藤井" />
+            </div>
+            <div class="field">
+              <label>メモ</label>
+              <input id="note" placeholder="例: まとめ買い" />
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <input id="addIfSameName" type="checkbox" checked />
+            <label for="addIfSameName" style="margin:0; font-size:14px; color:#445; font-weight:700;">同名があれば加算する</label>
+          </div>
+
+          <button class="btn btn-primary" id="createBtn">登録する</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn active" id="navList">一覧</button>
+      <button class="nav-btn" id="navCreate">登録</button>
+    </div>
+
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal">
+        <div class="modal-head">
+          <div class="modal-title" id="modalTitle">操作</div>
+          <button class="close-btn" id="closeModalBtn">閉じる</button>
+        </div>
+        <div id="modalBody"></div>
+      </div>
     </div>
   </div>
 
@@ -829,19 +959,16 @@ app.get('/inventory', (req, res) => {
     var activeMainTab = 'all';
     var selectedPhotoBase64 = '';
     var masterData = { categories: [], locations: [] };
-
     var FIXED_LOCATIONS = ['白鳥', '大谷', '千代ヶ丘', '事務所', '上麻生', '片平'];
 
     var els = {
       searchInput: document.getElementById('searchInput'),
       mainTabs: document.getElementById('mainTabs'),
       itemsContainer: document.getElementById('itemsContainer'),
-      summaryCount: document.getElementById('summaryCount'),
-      summaryQty: document.getElementById('summaryQty'),
+      refreshBtn: document.getElementById('refreshBtn'),
       cameraInput: document.getElementById('cameraInput'),
       photoInput: document.getElementById('photoInput'),
       photoPreview: document.getElementById('photoPreview'),
-      refreshBtn: document.getElementById('refreshBtn'),
       cameraBtn: document.getElementById('cameraBtn'),
       photoBtn: document.getElementById('photoBtn'),
       clearPhotoBtn: document.getElementById('clearPhotoBtn'),
@@ -851,7 +978,15 @@ app.get('/inventory', (req, res) => {
       locationOther: document.getElementById('locationOther'),
       categoryL: document.getElementById('category_l'),
       categoryM: document.getElementById('category_m'),
-      categoryS: document.getElementById('category_s')
+      categoryS: document.getElementById('category_s'),
+      screenList: document.getElementById('screenList'),
+      screenCreate: document.getElementById('screenCreate'),
+      navList: document.getElementById('navList'),
+      navCreate: document.getElementById('navCreate'),
+      modalBackdrop: document.getElementById('modalBackdrop'),
+      modalTitle: document.getElementById('modalTitle'),
+      modalBody: document.getElementById('modalBody'),
+      closeModalBtn: document.getElementById('closeModalBtn')
     };
 
     function safeText(v) {
@@ -918,42 +1053,12 @@ app.get('/inventory', (req, res) => {
       return out;
     }
 
-    function getMainCategories(items) {
-      var arr = [];
-      for (var i = 0; i < items.length; i++) arr.push(items[i].category_l);
-      return uniqueSorted(arr);
-    }
-
     function setSelectOptions(selectEl, values, placeholder) {
       var html = '<option value="">' + escapeHtml(placeholder || '選択してください') + '</option>';
       for (var i = 0; i < values.length; i++) {
         html += '<option value="' + escapeHtml(values[i]) + '">' + escapeHtml(values[i]) + '</option>';
       }
       selectEl.innerHTML = html;
-    }
-
-    function renderPhotoPreview() {
-      if (!selectedPhotoBase64) {
-        els.photoPreview.innerHTML = '写真未選択';
-        return;
-      }
-      els.photoPreview.innerHTML = '<img src="' + selectedPhotoBase64 + '" alt="preview" />';
-    }
-
-    function clearSelectedPhoto() {
-      selectedPhotoBase64 = '';
-      els.cameraInput.value = '';
-      els.photoInput.value = '';
-      renderPhotoPreview();
-    }
-
-    function fileToBase64(file) {
-      return new Promise(function(resolve, reject) {
-        var reader = new FileReader();
-        reader.onload = function(){ resolve(reader.result); };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
     }
 
     function buildCategoryTree() {
@@ -967,16 +1072,6 @@ app.get('/inventory', (req, res) => {
         if (m) {
           if (!tree[l][m]) tree[l][m] = [];
           if (s && tree[l][m].indexOf(s) === -1) tree[l][m].push(s);
-        }
-      }
-
-      var mainKeys = Object.keys(tree).sort(function(a,b){ return a.localeCompare(b,'ja'); });
-      for (var j = 0; j < mainKeys.length; j++) {
-        var mk = mainKeys[j];
-        var mids = Object.keys(tree[mk]);
-        mids.sort(function(a,b){ return a.localeCompare(b,'ja'); });
-        for (var k = 0; k < mids.length; k++) {
-          tree[mk][mids[k]].sort(function(a,b){ return a.localeCompare(b,'ja'); });
         }
       }
       return tree;
@@ -1031,6 +1126,61 @@ app.get('/inventory', (req, res) => {
       }
     }
 
+    function getMainCategories(items) {
+      var arr = [];
+      for (var i = 0; i < items.length; i++) arr.push(items[i].category_l);
+      return uniqueSorted(arr);
+    }
+
+    function renderPhotoPreview() {
+      if (!selectedPhotoBase64) {
+        els.photoPreview.innerHTML = '写真未選択';
+        return;
+      }
+      els.photoPreview.innerHTML = '<img src="' + selectedPhotoBase64 + '" alt="preview" />';
+    }
+
+    function clearSelectedPhoto() {
+      selectedPhotoBase64 = '';
+      els.cameraInput.value = '';
+      els.photoInput.value = '';
+      renderPhotoPreview();
+    }
+
+    function fileToBase64(file) {
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function(){ resolve(reader.result); };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function showListScreen() {
+      els.screenList.classList.add('active');
+      els.screenCreate.classList.remove('active');
+      els.navList.classList.add('active');
+      els.navCreate.classList.remove('active');
+    }
+
+    function showCreateScreen() {
+      els.screenCreate.classList.add('active');
+      els.screenList.classList.remove('active');
+      els.navCreate.classList.add('active');
+      els.navList.classList.remove('active');
+    }
+
+    function openModal(title, html) {
+      els.modalTitle.textContent = title;
+      els.modalBody.innerHTML = html;
+      els.modalBackdrop.classList.add('show');
+    }
+
+    function closeModal() {
+      els.modalBackdrop.classList.remove('show');
+      els.modalBody.innerHTML = '';
+    }
+
     function renderMainTabs() {
       var categories = getMainCategories(allItems);
       var tabs = ['all'];
@@ -1039,7 +1189,7 @@ app.get('/inventory', (req, res) => {
       var html = '';
       for (var j = 0; j < tabs.length; j++) {
         var key = tabs[j];
-        var label = key === 'all' ? '在庫一覧' : key;
+        var label = key === 'all' ? 'すべて' : key;
         html += '<button class="tab ' + (key === activeMainTab ? 'active' : '') + '" data-tab="' + escapeHtml(key) + '">' + escapeHtml(label) + '</button>';
       }
       els.mainTabs.innerHTML = html;
@@ -1051,13 +1201,6 @@ app.get('/inventory', (req, res) => {
           filterItems();
         });
       }
-    }
-
-    function renderSummary(items) {
-      els.summaryCount.textContent = String(items.length);
-      var totalQty = 0;
-      for (var i = 0; i < items.length; i++) totalQty += Number(items[i].qty || 0);
-      els.summaryQty.textContent = String(totalQty);
     }
 
     function filterItems() {
@@ -1083,7 +1226,6 @@ app.get('/inventory', (req, res) => {
       }
 
       filteredItems = items;
-      renderSummary(filteredItems);
       renderItems();
     }
 
@@ -1134,12 +1276,121 @@ app.get('/inventory', (req, res) => {
         html +=     '<div class="chips">' + chips + '</div>';
         html +=     '<div class="item-bottom">';
         html +=       '<div class="qty-box"><span class="qty-num">' + escapeHtml(item.qty || 0) + '</span><span class="qty-unit">' + escapeHtml(item.unit || '') + '</span></div>';
+        html +=       '<div class="item-actions">';
+        html +=         '<button class="btn btn-primary" onclick="consumeItem(\\'' + escapeHtml(item.item_id) + '\\',\\'' + escapeHtml(item.name || '') + '\\')">消費</button>';
+        html +=         '<button class="btn btn-secondary" onclick="editItem(\\'' + escapeHtml(item.item_id) + '\\')">編集</button>';
+        html +=       '</div>';
         html +=     '</div>';
         html +=   '</div>';
         html += '</div>';
       }
 
       els.itemsContainer.innerHTML = html;
+    }
+
+    async function consumeItem(itemId, itemName) {
+      var html = '';
+      html += '<div class="field"><label>対象</label><input value="' + escapeHtml(itemName) + '" disabled /></div>';
+      html += '<div class="grid-2">';
+      html +=   '<div class="field"><label>消費数</label><input id="consume_qty" type="number" value="1" /></div>';
+      html +=   '<div class="field"><label>担当者</label><input id="consume_user" placeholder="例: 藤井" /></div>';
+      html += '</div>';
+      html += '<div class="field"><label>メモ</label><input id="consume_note" value="使用・消費" /></div>';
+      html += '<button class="btn btn-primary" style="width:100%;" onclick="submitConsume(\\'' + escapeHtml(itemId) + '\\')">消費する</button>';
+      openModal('在庫を消費', html);
+    }
+
+    async function submitConsume(itemId) {
+      try {
+        var payload = {
+          item_id: itemId,
+          consume_qty: Number(document.getElementById('consume_qty').value || 0),
+          user: document.getElementById('consume_user').value.trim() || 'Unknown',
+          note: document.getElementById('consume_note').value.trim() || '使用・消費'
+        };
+
+        if (!payload.consume_qty || payload.consume_qty <= 0) {
+          alert('消費数を入力してください');
+          return;
+        }
+
+        var res = await fetch('/api/items/use', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        var data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        closeModal();
+        await loadItems();
+      } catch (err) {
+        alert(err.message || '消費処理に失敗しました');
+      }
+    }
+
+    async function editItem(itemId) {
+      try {
+        var res = await fetch('/api/items/' + encodeURIComponent(itemId));
+        var item = await res.json();
+        if (item.error) throw new Error(item.error);
+
+        var html = '';
+        html += '<div class="grid-2">';
+        html +=   '<div class="field"><label>品名</label><input id="edit_name" value="' + escapeHtml(item.name || '') + '" /></div>';
+        html +=   '<div class="field"><label>保管場所</label><input id="edit_location" value="' + escapeHtml(item.location || '') + '" /></div>';
+        html += '</div>';
+        html += '<div class="grid-2">';
+        html +=   '<div class="field"><label>大カテゴリ</label><input id="edit_category_l" value="' + escapeHtml(item.category_l || '') + '" /></div>';
+        html +=   '<div class="field"><label>中カテゴリ</label><input id="edit_category_m" value="' + escapeHtml(item.category_m || '') + '" /></div>';
+        html += '</div>';
+        html += '<div class="grid-2">';
+        html +=   '<div class="field"><label>小カテゴリ</label><input id="edit_category_s" value="' + escapeHtml(item.category_s || '') + '" /></div>';
+        html +=   '<div class="field"><label>単位</label><input id="edit_unit" value="' + escapeHtml(item.unit || '個') + '" /></div>';
+        html += '</div>';
+        html += '<div class="grid-2">';
+        html +=   '<div class="field"><label>しきい値</label><input id="edit_threshold" type="number" value="' + escapeHtml(item.threshold == null ? '' : item.threshold) + '" /></div>';
+        html +=   '<div class="field"><label>担当者</label><input id="edit_user" placeholder="例: 藤井" /></div>';
+        html += '</div>';
+        html += '<div class="field"><label>メモ</label><input id="edit_note" value="在庫情報更新" /></div>';
+        html += '<button class="btn btn-primary" style="width:100%;" onclick="submitEdit(\\'' + escapeHtml(item.item_id) + '\\')">更新する</button>';
+
+        openModal('在庫を編集', html);
+      } catch (err) {
+        alert(err.message || '編集情報の取得に失敗しました');
+      }
+    }
+
+    async function submitEdit(itemId) {
+      try {
+        var payload = {
+          item_id: itemId,
+          name: document.getElementById('edit_name').value.trim(),
+          category_l: document.getElementById('edit_category_l').value.trim(),
+          category_m: document.getElementById('edit_category_m').value.trim(),
+          category_s: document.getElementById('edit_category_s').value.trim(),
+          location: document.getElementById('edit_location').value.trim(),
+          unit: document.getElementById('edit_unit').value.trim() || '個',
+          threshold: document.getElementById('edit_threshold').value === '' ? '' : Number(document.getElementById('edit_threshold').value || 0),
+          user: document.getElementById('edit_user').value.trim() || 'Unknown',
+          note: document.getElementById('edit_note').value.trim() || '在庫情報更新'
+        };
+
+        var res = await fetch('/api/items/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        var data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        closeModal();
+        await loadItems();
+      } catch (err) {
+        alert(err.message || '更新に失敗しました');
+      }
     }
 
     async function loadItems() {
@@ -1226,6 +1477,7 @@ app.get('/inventory', (req, res) => {
         clearSelectedPhoto();
 
         await loadItems();
+        showListScreen();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         alert(err.message || '登録に失敗しました');
@@ -1287,10 +1539,23 @@ app.get('/inventory', (req, res) => {
 
     els.createBtn.addEventListener('click', createItem);
 
+    els.navList.addEventListener('click', showListScreen);
+    els.navCreate.addEventListener('click', showCreateScreen);
+    els.closeModalBtn.addEventListener('click', closeModal);
+
+    els.modalBackdrop.addEventListener('click', function(e) {
+      if (e.target === els.modalBackdrop) closeModal();
+    });
+
     renderPhotoPreview();
     loadItems().catch(function(err) {
       els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
     });
+
+    window.consumeItem = consumeItem;
+    window.submitConsume = submitConsume;
+    window.editItem = editItem;
+    window.submitEdit = submitEdit;
   </script>
 </body>
 </html>
