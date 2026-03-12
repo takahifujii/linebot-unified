@@ -420,12 +420,12 @@ app.get('/inventory', (req, res) => {
       --primary2:#8a84ff;
       --danger:#ff6b6b;
       --shadow:0 10px 24px rgba(39,47,89,0.08);
-      --radius:18px;
     }
     *{ box-sizing:border-box; }
     html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif; }
     body{ padding-bottom:110px; }
     .app{ max-width:720px; margin:0 auto; min-height:100vh; background:var(--bg); }
+
     .topbar{
       position:sticky; top:0; z-index:20;
       background:linear-gradient(180deg,#7269ff 0%, #665cff 100%);
@@ -440,6 +440,7 @@ app.get('/inventory', (req, res) => {
       border:none; background:rgba(255,255,255,0.16); color:#fff;
       padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; min-width:54px;
     }
+
     .content{ padding:14px 14px 0; }
     .search-card{
       margin-top:-22px; background:var(--card); border-radius:18px;
@@ -449,10 +450,15 @@ app.get('/inventory', (req, res) => {
       width:100%; border:1px solid var(--line); border-radius:14px;
       padding:13px 14px; font-size:16px; outline:none; background:#fff;
     }
-    .search-input:focus{
-      border-color:var(--primary);
-      box-shadow:0 0 0 3px rgba(108,99,255,0.12);
+
+    .summary{ display:flex; gap:10px; margin-bottom:14px; }
+    .summary-card{
+      flex:1; background:var(--card); border-radius:16px; padding:14px 12px;
+      box-shadow:var(--shadow);
     }
+    .summary-label{ font-size:12px; color:var(--muted); margin-bottom:4px; }
+    .summary-value{ font-size:24px; font-weight:800; line-height:1; }
+
     .tabs-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-bottom:12px; }
     .tabs-wrap::-webkit-scrollbar{ display:none; }
     .tabs{ display:flex; gap:10px; padding:2px 2px 6px; min-width:max-content; }
@@ -465,6 +471,7 @@ app.get('/inventory', (req, res) => {
       background:var(--primary); color:#fff; border-color:var(--primary);
       box-shadow:0 8px 16px rgba(108,99,255,0.22);
     }
+
     .subtabs{
       display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch;
       scrollbar-width:none; margin-bottom:14px; padding-bottom:2px;
@@ -475,44 +482,45 @@ app.get('/inventory', (req, res) => {
       padding:8px 12px; font-size:13px; white-space:nowrap; cursor:pointer;
     }
     .subtab.active{ background:#d8dcff; color:#2d348b; font-weight:700; }
-    .summary{ display:flex; gap:10px; margin-bottom:14px; }
-    .summary-card{
-      flex:1; background:var(--card); border-radius:16px; padding:14px 12px;
-      box-shadow:var(--shadow); min-width:0;
-    }
-    .summary-label{ font-size:12px; color:var(--muted); margin-bottom:4px; }
-    .summary-value{ font-size:24px; font-weight:800; line-height:1; }
+
     .screen{ display:none; }
     .screen.active{ display:block; }
+
     .items{ display:flex; flex-direction:column; gap:12px; }
+
     .item-card{
       background:var(--card); border-radius:20px; padding:12px; box-shadow:var(--shadow);
       display:flex; gap:12px; align-items:flex-start;
     }
     .thumb-box{
-      width:92px; min-width:92px; height:92px; border-radius:16px; overflow:hidden;
+      width:96px; min-width:96px; height:96px; border-radius:16px; overflow:hidden;
       background:#eceff8; display:flex; align-items:center; justify-content:center;
       color:#9aa3b6; font-size:12px;
     }
     .thumb-box img{ width:100%; height:100%; object-fit:cover; display:block; }
+
     .item-main{ flex:1; min-width:0; }
     .item-name{ font-size:17px; font-weight:800; margin-bottom:4px; line-height:1.35; word-break:break-word; }
-    .item-meta{ font-size:12px; color:var(--muted); margin-bottom:8px; line-height:1.5; }
+    .item-meta{ font-size:12px; color:var(--muted); margin-bottom:8px; }
     .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
     .chip{ background:#f2f4fb; border-radius:999px; padding:5px 9px; font-size:12px; color:#596178; }
+
     .item-bottom{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
     .qty-box{ display:flex; align-items:baseline; gap:4px; color:var(--primary); }
     .qty-num{ font-size:28px; font-weight:800; line-height:1; }
     .qty-unit{ font-size:14px; font-weight:700; }
+
     .item-actions{ display:flex; gap:8px; flex-wrap:wrap; }
     .btn{ border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:13px; font-weight:700; }
     .btn-secondary{ background:#eef0f7; color:#3c455a; }
     .btn-primary{ background:var(--primary); color:#fff; box-shadow:0 8px 16px rgba(108,99,255,0.22); }
     .btn-danger{ background:#fff1f1; color:#d94b4b; }
+
     .empty{
       text-align:center; color:var(--muted); background:#fff; border-radius:18px;
       padding:32px 18px; box-shadow:var(--shadow);
     }
+
     .form-card{
       background:#fff; border-radius:20px; padding:16px; box-shadow:var(--shadow); margin-bottom:14px;
     }
@@ -520,19 +528,59 @@ app.get('/inventory', (req, res) => {
     .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .field{ margin-bottom:10px; }
     .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:700; }
-    .field input,.field select,.field textarea{
+    .field input,.field textarea{
       width:100%; border:1px solid var(--line); border-radius:14px;
       padding:12px 12px; font-size:15px; outline:none; background:#fff;
     }
-    .field textarea{ min-height:84px; resize:vertical; }
-    .field input:focus,.field select:focus,.field textarea:focus{
-      border-color:var(--primary); box-shadow:0 0 0 3px rgba(108,99,255,0.12);
-    }
+
     .toggle-row{
       display:flex; align-items:center; gap:10px; padding:10px 12px;
       border-radius:14px; background:#f7f8fc; margin-bottom:14px;
     }
     .toggle-row input{ width:auto; transform:scale(1.15); }
+
+    .photo-picker{
+      margin-bottom:14px;
+      border:2px dashed #d8dcef;
+      border-radius:18px;
+      background:#fafbff;
+      padding:14px;
+    }
+    .photo-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .photo-btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-size:14px;
+      font-weight:700;
+      background:#eef0ff;
+      color:#454ca5;
+    }
+    .photo-preview{
+      width:100%;
+      min-height:180px;
+      border-radius:16px;
+      background:#eef1f8;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      color:#95a0b6;
+      font-size:13px;
+    }
+    .photo-preview img{
+      width:100%;
+      max-height:320px;
+      object-fit:cover;
+      display:block;
+    }
+
     .bottom-nav{
       position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%;
       max-width:720px; background:#fff; border-top:1px solid var(--line);
@@ -545,12 +593,14 @@ app.get('/inventory', (req, res) => {
       cursor:pointer; padding:8px 12px; border-radius:12px; min-width:92px;
     }
     .nav-btn.active{ color:var(--primary); background:#f0f1ff; }
+
     .floating-add{
       position:fixed; right:18px; bottom:82px; width:58px; height:58px; border:none;
       border-radius:50%; background:linear-gradient(180deg,var(--primary2),var(--primary));
       color:#fff; font-size:30px; cursor:pointer;
       box-shadow:0 14px 24px rgba(108,99,255,0.28); z-index:26;
     }
+
     .modal-backdrop{
       position:fixed; inset:0; background:rgba(20,24,42,0.45);
       display:none; align-items:flex-end; z-index:40;
@@ -571,6 +621,7 @@ app.get('/inventory', (req, res) => {
       border:none; background:#f2f4f8; color:#4d5568; border-radius:999px;
       padding:8px 12px; cursor:pointer; font-weight:700;
     }
+
     .note{ font-size:12px; color:var(--muted); margin-top:6px; }
     .status-out{ color:#d94b4b; font-weight:700; }
 
@@ -625,6 +676,20 @@ app.get('/inventory', (req, res) => {
       <div class="screen" id="screenForm">
         <div class="form-card">
           <div class="form-title">新規登録</div>
+
+          <div class="photo-picker">
+            <div class="photo-actions">
+              <button type="button" class="photo-btn" onclick="openCamera()">カメラ起動</button>
+              <button type="button" class="photo-btn" onclick="openPhotoLibrary()">写真を選ぶ</button>
+              <button type="button" class="photo-btn" onclick="clearSelectedPhoto()">写真を消す</button>
+            </div>
+
+            <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none;" />
+            <input id="photoInput" type="file" accept="image/*" style="display:none;" />
+
+            <div class="photo-preview" id="photoPreview">写真未選択</div>
+            <div class="note">スマホではカメラ起動、または写真ライブラリから選択できます。</div>
+          </div>
 
           <div class="grid-2">
             <div class="field">
@@ -687,7 +752,7 @@ app.get('/inventory', (req, res) => {
           </div>
 
           <button class="btn btn-primary" style="width:100%;" onclick="createItem()">登録する</button>
-          <div class="note">画像登録UIは次段階で追加可能です。現在は既存GASの在庫登録・更新・消費・アーカイブに対応しています。</div>
+          <div class="note">登録した写真はGoogle Driveに保存され、スプレッドシートの画像URLからサムネ表示します。</div>
         </div>
       </div>
     </div>
@@ -716,6 +781,7 @@ app.get('/inventory', (req, res) => {
     let activeMainTab = 'all';
     let activeSubTab = 'all';
     let editingItemId = null;
+    let selectedPhotoBase64 = '';
 
     const els = {
       searchInput: document.getElementById('searchInput'),
@@ -731,6 +797,9 @@ app.get('/inventory', (req, res) => {
       modalBackdrop: document.getElementById('modalBackdrop'),
       modalTitle: document.getElementById('modalTitle'),
       modalBody: document.getElementById('modalBody'),
+      cameraInput: document.getElementById('cameraInput'),
+      photoInput: document.getElementById('photoInput'),
+      photoPreview: document.getElementById('photoPreview'),
     };
 
     function safeText(v) {
@@ -746,11 +815,32 @@ app.get('/inventory', (req, res) => {
         .replace(/'/g, '&#39;');
     }
 
+    function normalizeImageUrl(url) {
+      const raw = safeText(url).trim();
+      if (!raw) return '';
+
+      if (raw.includes('uc?export=view&id=')) {
+        return raw;
+      }
+
+      const fileMatch = raw.match(/\\/file\\/d\\/([^\\/]+)/);
+      if (fileMatch && fileMatch[1]) {
+        return 'https://drive.google.com/uc?export=view&id=' + fileMatch[1];
+      }
+
+      const openMatch = raw.match(/[?&]id=([^&]+)/);
+      if (openMatch && openMatch[1]) {
+        return 'https://drive.google.com/uc?export=view&id=' + openMatch[1];
+      }
+
+      return raw;
+    }
+
     function getPhotoUrls(item) {
       if (!item.photo_urls) return [];
       return safeText(item.photo_urls)
         .split(',')
-        .map(v => v.trim())
+        .map(v => normalizeImageUrl(v))
         .filter(Boolean);
     }
 
@@ -796,6 +886,44 @@ app.get('/inventory', (req, res) => {
         const bn = safeText(b.name);
         return an.localeCompare(bn, 'ja');
       });
+    }
+
+    function renderPhotoPreview() {
+      if (!selectedPhotoBase64) {
+        els.photoPreview.innerHTML = '写真未選択';
+        return;
+      }
+      els.photoPreview.innerHTML = '<img src="' + selectedPhotoBase64 + '" alt="preview" />';
+    }
+
+    function clearSelectedPhoto() {
+      selectedPhotoBase64 = '';
+      els.cameraInput.value = '';
+      els.photoInput.value = '';
+      renderPhotoPreview();
+    }
+
+    function openCamera() {
+      els.cameraInput.click();
+    }
+
+    function openPhotoLibrary() {
+      els.photoInput.click();
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleSelectedFile(file) {
+      if (!file) return;
+      selectedPhotoBase64 = await fileToBase64(file);
+      renderPhotoPreview();
     }
 
     function filterItems() {
@@ -1009,7 +1137,8 @@ app.get('/inventory', (req, res) => {
           threshold: document.getElementById('threshold').value === '' ? '' : Number(document.getElementById('threshold').value || 0),
           user: document.getElementById('user').value.trim() || 'Unknown',
           note: document.getElementById('note').value.trim() || 'Node画面から登録',
-          addIfSameName: document.getElementById('addIfSameName').checked
+          addIfSameName: document.getElementById('addIfSameName').checked,
+          photo_base64: selectedPhotoBase64 || ''
         };
 
         if (!payload.name) {
@@ -1038,6 +1167,7 @@ app.get('/inventory', (req, res) => {
         document.getElementById('unit').value = '個';
         document.getElementById('threshold').value = '0';
         document.getElementById('note').value = '';
+        clearSelectedPhoto();
 
         await loadItems();
         goList();
@@ -1056,8 +1186,13 @@ app.get('/inventory', (req, res) => {
         }
 
         editingItemId = itemId;
+        const photos = getPhotoUrls(item);
+        const preview = photos[0]
+          ? '<div class="photo-preview" style="margin-bottom:12px;"><img src="' + escapeHtml(photos[0]) + '" alt=""></div>'
+          : '<div class="photo-preview" style="margin-bottom:12px;">画像なし</div>';
 
         openModal('在庫を編集', \`
+          \${preview}
           <div class="grid-2">
             <div class="field">
               <label>品名</label>
@@ -1245,8 +1380,29 @@ app.get('/inventory', (req, res) => {
       }
     });
 
+    els.cameraInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        await handleSelectedFile(file);
+      } catch (err) {
+        alert('画像の読み込みに失敗しました');
+      }
+    });
+
+    els.photoInput.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        await handleSelectedFile(file);
+      } catch (err) {
+        alert('画像の読み込みに失敗しました');
+      }
+    });
+
     async function boot() {
       try {
+        renderPhotoPreview();
         await loadItems();
       } catch (err) {
         els.itemsContainer.innerHTML = \`<div class="empty">読み込みに失敗しました<br>\${escapeHtml(err.message || '')}</div>\`;
@@ -1267,6 +1423,9 @@ app.get('/inventory', (req, res) => {
     window.submitConsume = submitConsume;
     window.archiveItem = archiveItem;
     window.closeModal = closeModal;
+    window.openCamera = openCamera;
+    window.openPhotoLibrary = openPhotoLibrary;
+    window.clearSelectedPhoto = clearSelectedPhoto;
   </script>
 </body>
 </html>
@@ -1306,5 +1465,5 @@ app.get('/logtest', (req, res) => {
 // ------------------------------------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(\`Server is running on port \${PORT}\`);
 });
