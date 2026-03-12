@@ -18,15 +18,11 @@ const app = express();
 const INVENTORY_API_URL = process.env.INVENTORY_API_URL;
 const INVENTORY_API_TOKEN = process.env.INVENTORY_API_TOKEN;
 
-
-
 // ------------------------------------------
-// PWA設定（ここが追加された部分）
+// PWA設定
 // ------------------------------------------
-
 app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
-
   res.send(JSON.stringify({
     name: 'E!stockS',
     short_name: 'E!stockS',
@@ -34,7 +30,6 @@ app.get('/manifest.json', (req, res) => {
     display: 'standalone',
     background_color: '#0b1636',
     theme_color: '#7c74ff',
-
     icons: [
       {
         src: '/icon-192.png',
@@ -50,22 +45,17 @@ app.get('/manifest.json', (req, res) => {
   }));
 });
 
-
 app.get('/icon-192.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'icon-192.png'));
 });
-
 
 app.get('/icon-512.png', (req, res) => {
   res.sendFile(path.join(__dirname, 'icon-512.png'));
 });
 
-
-
 // ------------------------------------------
 // 共通ヘルパー
 // ------------------------------------------
-
 function requireEnv(name, value) {
   if (!value) {
     throw new Error(`${name} が未設定です`);
@@ -73,7 +63,6 @@ function requireEnv(name, value) {
 }
 
 async function callInventoryGet(action, extraParams = {}) {
-
   requireEnv('INVENTORY_API_URL', INVENTORY_API_URL);
   requireEnv('INVENTORY_API_TOKEN', INVENTORY_API_TOKEN);
 
@@ -89,13 +78,44 @@ async function callInventoryGet(action, extraParams = {}) {
   return response.data;
 }
 
-
 async function callInventoryPost(action, payload = {}) {
-
   requireEnv('INVENTORY_API_URL', INVENTORY_API_URL);
   requireEnv('INVENTORY_API_TOKEN', INVENTORY_API_TOKEN);
 
   const response = await axios.post(
+    INVENTORY_API_URL,
+    {
+      token: INVENTORY_API_TOKEN,
+      action,
+      payload,
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    }
+  );
+
+  return response.data;
+}
+
+function unwrapGasResponse(gasResponse) {
+  if (!gasResponse) {
+    throw new Error('GASから応答がありません');
+  }
+
+  if (gasResponse.status === 'error') {
+    const msg =
+      typeof gasResponse.data === 'string'
+        ? gasResponse.data
+        : JSON.stringify(gasResponse.data);
+
+    throw new Error(msg || 'GASエラー');
+  }
+
+  return gasResponse.data;
+}
     INVENTORY_API_URL,
     {
       token: INVENTORY_API_TOKEN,
