@@ -417,7 +417,6 @@ app.get('/inventory', (req, res) => {
       --muted:#7b8397;
       --line:#e6e8f0;
       --primary:#6c63ff;
-      --primary2:#8a84ff;
       --danger:#ff6b6b;
       --shadow:0 10px 24px rgba(39,47,89,0.08);
     }
@@ -429,14 +428,12 @@ app.get('/inventory', (req, res) => {
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
     }
-    body{ padding-bottom:110px; }
+    body{ padding-bottom:100px; }
     .app{
       max-width:720px;
       margin:0 auto;
       min-height:100vh;
-      background:var(--bg);
     }
-
     .topbar{
       position:sticky;
       top:0;
@@ -457,35 +454,28 @@ app.get('/inventory', (req, res) => {
     .title{
       font-size:22px;
       font-weight:800;
-      letter-spacing:0.02em;
     }
     .title-sub{
       margin-top:4px;
       font-size:12px;
-      opacity:0.88;
+      opacity:.9;
     }
     .icon-btn{
       border:none;
-      background:rgba(255,255,255,0.16);
+      background:rgba(255,255,255,.16);
       color:#fff;
       padding:10px 12px;
       border-radius:12px;
       cursor:pointer;
       font-size:14px;
-      min-width:54px;
     }
-
-    .content{
-      padding:14px 14px 0;
-    }
-    .search-card{
-      margin-top:-22px;
-      background:var(--card);
+    .content{ padding:14px; }
+    .search-card,.form-card,.summary-card,.item-card{
+      background:#fff;
       border-radius:18px;
       box-shadow:var(--shadow);
-      padding:14px;
-      margin-bottom:14px;
     }
+    .search-card{ padding:14px; margin-top:-22px; margin-bottom:14px; }
     .search-input{
       width:100%;
       border:1px solid var(--line);
@@ -495,7 +485,6 @@ app.get('/inventory', (req, res) => {
       outline:none;
       background:#fff;
     }
-
     .summary{
       display:flex;
       gap:10px;
@@ -503,10 +492,7 @@ app.get('/inventory', (req, res) => {
     }
     .summary-card{
       flex:1;
-      background:var(--card);
-      border-radius:16px;
       padding:14px 12px;
-      box-shadow:var(--shadow);
     }
     .summary-label{
       font-size:12px;
@@ -518,7 +504,6 @@ app.get('/inventory', (req, res) => {
       font-weight:800;
       line-height:1;
     }
-
     .tabs-wrap{
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
@@ -542,55 +527,19 @@ app.get('/inventory', (req, res) => {
       font-size:14px;
       white-space:nowrap;
       cursor:pointer;
-      box-shadow:0 2px 6px rgba(0,0,0,0.02);
     }
     .tab.active{
       background:var(--primary);
       color:#fff;
       border-color:var(--primary);
-      box-shadow:0 8px 16px rgba(108,99,255,0.22);
     }
-
-    .subtabs{
-      display:flex;
-      gap:8px;
-      overflow-x:auto;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
-      margin-bottom:14px;
-      padding-bottom:2px;
-    }
-    .subtabs::-webkit-scrollbar{ display:none; }
-    .subtab{
-      border:none;
-      background:#eef0ff;
-      color:#4e54a3;
-      border-radius:999px;
-      padding:8px 12px;
-      font-size:13px;
-      white-space:nowrap;
-      cursor:pointer;
-    }
-    .subtab.active{
-      background:#d8dcff;
-      color:#2d348b;
-      font-weight:700;
-    }
-
-    .screen{ display:none; }
-    .screen.active{ display:block; }
-
     .items{
       display:flex;
       flex-direction:column;
       gap:12px;
     }
-
     .item-card{
-      background:var(--card);
-      border-radius:20px;
       padding:12px;
-      box-shadow:var(--shadow);
       display:flex;
       gap:12px;
       align-items:flex-start;
@@ -615,7 +564,6 @@ app.get('/inventory', (req, res) => {
       object-fit:cover;
       display:block;
     }
-
     .item-main{
       flex:1;
       min-width:0;
@@ -645,57 +593,11 @@ app.get('/inventory', (req, res) => {
       font-size:12px;
       color:#596178;
     }
-
-    .item-bottom{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
     .qty-box{
-      display:flex;
-      align-items:baseline;
-      gap:4px;
       color:var(--primary);
-    }
-    .qty-num{
-      font-size:28px;
       font-weight:800;
-      line-height:1;
+      font-size:22px;
     }
-    .qty-unit{
-      font-size:14px;
-      font-weight:700;
-    }
-
-    .item-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
-    .btn{
-      border:none;
-      border-radius:999px;
-      padding:10px 14px;
-      cursor:pointer;
-      font-size:13px;
-      font-weight:700;
-    }
-    .btn-secondary{
-      background:#eef0f7;
-      color:#3c455a;
-    }
-    .btn-primary{
-      background:var(--primary);
-      color:#fff;
-      box-shadow:0 8px 16px rgba(108,99,255,0.22);
-    }
-    .btn-danger{
-      background:#fff1f1;
-      color:#d94b4b;
-    }
-
     .empty{
       text-align:center;
       color:var(--muted);
@@ -704,13 +606,9 @@ app.get('/inventory', (req, res) => {
       padding:32px 18px;
       box-shadow:var(--shadow);
     }
-
     .form-card{
-      background:#fff;
-      border-radius:20px;
       padding:16px;
-      box-shadow:var(--shadow);
-      margin-bottom:14px;
+      margin-top:14px;
     }
     .form-title{
       font-size:18px;
@@ -741,7 +639,6 @@ app.get('/inventory', (req, res) => {
       outline:none;
       background:#fff;
     }
-
     .toggle-row{
       display:flex;
       align-items:center;
@@ -755,7 +652,6 @@ app.get('/inventory', (req, res) => {
       width:auto;
       transform:scale(1.15);
     }
-
     .photo-picker{
       margin-bottom:14px;
       border:2px dashed #d8dcef;
@@ -769,15 +665,22 @@ app.get('/inventory', (req, res) => {
       flex-wrap:wrap;
       margin-bottom:10px;
     }
-    .photo-btn{
+    .photo-btn,.btn{
       border:none;
       border-radius:12px;
       padding:10px 14px;
       cursor:pointer;
       font-size:14px;
       font-weight:700;
+    }
+    .photo-btn{
       background:#eef0ff;
       color:#454ca5;
+    }
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+      width:100%;
     }
     .photo-preview{
       width:100%;
@@ -798,113 +701,11 @@ app.get('/inventory', (req, res) => {
       object-fit:cover;
       display:block;
     }
-
-    .bottom-nav{
-      position:fixed;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:0;
-      width:100%;
-      max-width:720px;
-      background:#fff;
-      border-top:1px solid var(--line);
-      display:flex;
-      justify-content:space-around;
-      padding:10px 10px calc(10px + env(safe-area-inset-bottom));
-      z-index:25;
-      box-shadow:0 -8px 20px rgba(18,28,45,0.06);
-    }
-    .nav-btn{
-      border:none;
-      background:none;
-      color:#70788d;
-      font-size:13px;
-      font-weight:700;
-      cursor:pointer;
-      padding:8px 12px;
-      border-radius:12px;
-      min-width:92px;
-    }
-    .nav-btn.active{
-      color:var(--primary);
-      background:#f0f1ff;
-    }
-
-    .floating-add{
-      position:fixed;
-      right:18px;
-      bottom:82px;
-      width:58px;
-      height:58px;
-      border:none;
-      border-radius:50%;
-      background:linear-gradient(180deg,var(--primary2),var(--primary));
-      color:#fff;
-      font-size:30px;
-      cursor:pointer;
-      box-shadow:0 14px 24px rgba(108,99,255,0.28);
-      z-index:26;
-    }
-
-    .modal-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(20,24,42,0.45);
-      display:none;
-      align-items:flex-end;
-      z-index:40;
-    }
-    .modal-backdrop.show{ display:flex; }
-    .modal{
-      width:100%;
-      max-width:720px;
-      margin:0 auto;
-      background:#fff;
-      border-top-left-radius:22px;
-      border-top-right-radius:22px;
-      padding:18px 16px 24px;
-      max-height:88vh;
-      overflow:auto;
-      box-shadow:0 -8px 24px rgba(0,0,0,0.16);
-    }
-    .modal-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:14px;
-    }
-    .modal-title{
-      font-size:18px;
-      font-weight:800;
-    }
-    .close-btn{
-      border:none;
-      background:#f2f4f8;
-      color:#4d5568;
-      border-radius:999px;
-      padding:8px 12px;
-      cursor:pointer;
-      font-weight:700;
-    }
-
-    .note{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:6px;
-    }
-    .status-out{
-      color:#d94b4b;
-      font-weight:700;
-    }
-
     @media (max-width:520px){
       .grid-2{ grid-template-columns:1fr; }
       .summary{ flex-direction:column; }
-      .item-card{ padding:11px; }
       .thumb-box{ width:82px; min-width:82px; height:82px; }
       .item-name{ font-size:16px; }
-      .qty-num{ font-size:26px; }
     }
   </style>
 </head>
@@ -916,7 +717,7 @@ app.get('/inventory', (req, res) => {
           <div class="title">在庫管理</div>
           <div class="title-sub">リフォーム工房アントレ 在庫アプリ</div>
         </div>
-        <button class="icon-btn" onclick="refreshAll()">更新</button>
+        <button class="icon-btn" id="refreshBtn">更新</button>
       </div>
     </div>
 
@@ -925,168 +726,134 @@ app.get('/inventory', (req, res) => {
         <input id="searchInput" class="search-input" placeholder="品名・カテゴリ・場所で検索" />
       </div>
 
-      <div class="screen active" id="screenList">
-        <div class="summary">
-          <div class="summary-card">
-            <div class="summary-label">在庫アイテム数</div>
-            <div class="summary-value" id="summaryCount">0</div>
+      <div class="summary">
+        <div class="summary-card">
+          <div class="summary-label">在庫アイテム数</div>
+          <div class="summary-value" id="summaryCount">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-label">在庫合計数量</div>
+          <div class="summary-value" id="summaryQty">0</div>
+        </div>
+      </div>
+
+      <div class="tabs-wrap">
+        <div class="tabs" id="mainTabs"></div>
+      </div>
+
+      <div class="items" id="itemsContainer"></div>
+
+      <div class="form-card">
+        <div class="form-title">新規登録</div>
+
+        <div class="photo-picker">
+          <div class="photo-actions">
+            <button type="button" class="photo-btn" id="cameraBtn">カメラ起動</button>
+            <button type="button" class="photo-btn" id="photoBtn">写真を選ぶ</button>
+            <button type="button" class="photo-btn" id="clearPhotoBtn">写真を消す</button>
           </div>
-          <div class="summary-card">
-            <div class="summary-label">在庫合計数量</div>
-            <div class="summary-value" id="summaryQty">0</div>
+
+          <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none;" />
+          <input id="photoInput" type="file" accept="image/*" style="display:none;" />
+
+          <div class="photo-preview" id="photoPreview">写真未選択</div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>品名</label>
+            <input id="name" placeholder="例: 給湯器リモコン" />
+          </div>
+          <div class="field">
+            <label>保管場所</label>
+            <input id="location" list="location_list" placeholder="選択または入力" />
+            <datalist id="location_list"></datalist>
           </div>
         </div>
 
-        <div class="tabs-wrap">
-          <div class="tabs" id="mainTabs"></div>
+        <div class="grid-2">
+          <div class="field">
+            <label>大カテゴリ</label>
+            <input id="category_l" list="category_l_list" placeholder="選択または入力" />
+            <datalist id="category_l_list"></datalist>
+          </div>
+          <div class="field">
+            <label>中カテゴリ</label>
+            <input id="category_m" list="category_m_list" placeholder="選択または入力" />
+            <datalist id="category_m_list"></datalist>
+          </div>
         </div>
 
-        <div class="subtabs" id="subTabs" style="display:none;"></div>
-
-        <div class="items" id="itemsContainer"></div>
-      </div>
-
-      <div class="screen" id="screenForm">
-        <div class="form-card">
-          <div class="form-title">新規登録</div>
-
-          <div class="photo-picker">
-            <div class="photo-actions">
-              <button type="button" class="photo-btn" onclick="openCamera()">カメラ起動</button>
-              <button type="button" class="photo-btn" onclick="openPhotoLibrary()">写真を選ぶ</button>
-              <button type="button" class="photo-btn" onclick="clearSelectedPhoto()">写真を消す</button>
-            </div>
-
-            <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none;" />
-            <input id="photoInput" type="file" accept="image/*" style="display:none;" />
-
-            <div class="photo-preview" id="photoPreview">写真未選択</div>
-            <div class="note">スマホではカメラ起動、または写真ライブラリから選択できます。</div>
+        <div class="grid-2">
+          <div class="field">
+            <label>小カテゴリ</label>
+            <input id="category_s" list="category_s_list" placeholder="選択または入力" />
+            <datalist id="category_s_list"></datalist>
           </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>品名</label>
-              <input id="name" placeholder="例: 給湯器リモコン" />
-            </div>
-            <div class="field">
-              <label>保管場所</label>
-              <input id="location" list="location_list" placeholder="選択または入力" />
-              <datalist id="location_list"></datalist>
-            </div>
+          <div class="field">
+            <label>数量</label>
+            <input id="qty" type="number" value="1" />
           </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>大カテゴリ</label>
-              <input id="category_l" list="category_l_list" placeholder="選択または入力" />
-              <datalist id="category_l_list"></datalist>
-            </div>
-            <div class="field">
-              <label>中カテゴリ</label>
-              <input id="category_m" list="category_m_list" placeholder="選択または入力" />
-              <datalist id="category_m_list"></datalist>
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>小カテゴリ</label>
-              <input id="category_s" list="category_s_list" placeholder="選択または入力" />
-              <datalist id="category_s_list"></datalist>
-            </div>
-            <div class="field">
-              <label>数量</label>
-              <input id="qty" type="number" value="1" />
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>単位</label>
-              <input id="unit" value="個" />
-            </div>
-            <div class="field">
-              <label>しきい値</label>
-              <input id="threshold" type="number" value="0" />
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="field">
-              <label>登録者</label>
-              <input id="user" placeholder="例: 藤井" />
-            </div>
-            <div class="field">
-              <label>メモ</label>
-              <input id="note" placeholder="例: まとめ買い" />
-            </div>
-          </div>
-
-          <div class="toggle-row">
-            <input id="addIfSameName" type="checkbox" checked />
-            <label for="addIfSameName" style="margin:0; font-size:14px; color:#445; font-weight:700;">同名があれば加算する</label>
-          </div>
-
-          <button class="btn btn-primary" style="width:100%;" onclick="createItem()">登録する</button>
-          <div class="note">登録した写真はGoogle Driveに保存され、スプレッドシートの画像URLからサムネ表示します。</div>
         </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>単位</label>
+            <input id="unit" value="個" />
+          </div>
+          <div class="field">
+            <label>しきい値</label>
+            <input id="threshold" type="number" value="0" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>登録者</label>
+            <input id="user" placeholder="例: 藤井" />
+          </div>
+          <div class="field">
+            <label>メモ</label>
+            <input id="note" placeholder="例: まとめ買い" />
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <input id="addIfSameName" type="checkbox" checked />
+          <label for="addIfSameName" style="margin:0; font-size:14px; color:#445; font-weight:700;">同名があれば加算する</label>
+        </div>
+
+        <button class="btn btn-primary" id="createBtn">登録する</button>
       </div>
-    </div>
-  </div>
-
-  <button class="floating-add" onclick="goForm()">＋</button>
-
-  <div class="bottom-nav">
-    <button class="nav-btn active" id="navList" onclick="goList()">一覧</button>
-    <button class="nav-btn" id="navForm" onclick="goForm()">登録</button>
-  </div>
-
-  <div class="modal-backdrop" id="modalBackdrop">
-    <div class="modal">
-      <div class="modal-head">
-        <div class="modal-title" id="modalTitle">編集</div>
-        <button class="close-btn" onclick="closeModal()">閉じる</button>
-      </div>
-      <div id="modalBody"></div>
     </div>
   </div>
 
   <script>
-    let allItems = [];
-    let filteredItems = [];
-    let activeMainTab = 'all';
-    let activeSubTab = 'all';
-    let editingItemId = null;
-    let selectedPhotoBase64 = '';
-    let masterData = {
-      categories: [],
-      locations: []
-    };
+    var allItems = [];
+    var filteredItems = [];
+    var activeMainTab = 'all';
+    var selectedPhotoBase64 = '';
+    var masterData = { categories: [], locations: [] };
+    var FIXED_LOCATIONS = ['白鳥', '大谷', '千代ヶ丘', '事務所', '上麻生', '片平'];
 
-    const FIXED_LOCATIONS = ['白鳥', '大谷', '千代ヶ丘', '事務所', '上麻生', '片平'];
-
-    const els = {
+    var els = {
       searchInput: document.getElementById('searchInput'),
       mainTabs: document.getElementById('mainTabs'),
-      subTabs: document.getElementById('subTabs'),
       itemsContainer: document.getElementById('itemsContainer'),
       summaryCount: document.getElementById('summaryCount'),
       summaryQty: document.getElementById('summaryQty'),
-      screenList: document.getElementById('screenList'),
-      screenForm: document.getElementById('screenForm'),
-      navList: document.getElementById('navList'),
-      navForm: document.getElementById('navForm'),
-      modalBackdrop: document.getElementById('modalBackdrop'),
-      modalTitle: document.getElementById('modalTitle'),
-      modalBody: document.getElementById('modalBody'),
       cameraInput: document.getElementById('cameraInput'),
       photoInput: document.getElementById('photoInput'),
-      photoPreview: document.getElementById('photoPreview')
+      photoPreview: document.getElementById('photoPreview'),
+      refreshBtn: document.getElementById('refreshBtn'),
+      cameraBtn: document.getElementById('cameraBtn'),
+      photoBtn: document.getElementById('photoBtn'),
+      clearPhotoBtn: document.getElementById('clearPhotoBtn'),
+      createBtn: document.getElementById('createBtn')
     };
 
     function safeText(v) {
-      return (v ?? '').toString();
+      return (v == null ? '' : String(v));
     }
 
     function escapeHtml(value) {
@@ -1099,40 +866,48 @@ app.get('/inventory', (req, res) => {
     }
 
     function uniqueSorted(list) {
-      return Array.from(new Set(list.map(function(v){ return safeText(v).trim(); }).filter(Boolean)))
-        .sort(function(a, b){ return a.localeCompare(b, 'ja'); });
+      var arr = [];
+      var seen = {};
+      for (var i = 0; i < list.length; i++) {
+        var v = safeText(list[i]).trim();
+        if (!v) continue;
+        if (!seen[v]) {
+          seen[v] = true;
+          arr.push(v);
+        }
+      }
+      arr.sort(function(a, b){ return a.localeCompare(b, 'ja'); });
+      return arr;
     }
 
     function setDatalistOptions(id, values) {
-      const el = document.getElementById(id);
+      var el = document.getElementById(id);
       if (!el) return;
-      el.innerHTML = values
-        .map(function(v){
-          return '<option value="' + escapeHtml(v) + '"></option>';
-        })
-        .join('');
+      var html = '';
+      for (var i = 0; i < values.length; i++) {
+        html += '<option value="' + escapeHtml(values[i]) + '"></option>';
+      }
+      el.innerHTML = html;
     }
 
     function extractDriveFileId(url) {
-      const raw = safeText(url).trim();
+      var raw = safeText(url).trim();
       if (!raw) return '';
 
-      const fileMatch = raw.match(/\\/file\\/d\\/([^/]+)/);
+      var fileMatch = raw.match(/\\/file\\/d\\/([^/]+)/);
       if (fileMatch && fileMatch[1]) return fileMatch[1];
 
-      const idMatch = raw.match(/[?&]id=([^&]+)/);
+      var idMatch = raw.match(/[?&]id=([^&]+)/);
       if (idMatch && idMatch[1]) return idMatch[1];
 
       return '';
     }
 
     function buildDriveImageCandidates(url) {
-      const raw = safeText(url).trim();
+      var raw = safeText(url).trim();
       if (!raw) return [];
-
-      const fileId = extractDriveFileId(raw);
+      var fileId = extractDriveFileId(raw);
       if (!fileId) return [raw];
-
       return [
         'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000',
         'https://drive.google.com/uc?export=view&id=' + fileId,
@@ -1142,70 +917,21 @@ app.get('/inventory', (req, res) => {
 
     function getPhotoUrls(item) {
       if (!item.photo_urls) return [];
-      return safeText(item.photo_urls)
-        .split(',')
-        .map(function(v){ return v.trim(); })
-        .filter(Boolean);
-    }
-
-    function getNewestTimestamp(item) {
-      const updated = item.updated_at ? Date.parse(item.updated_at) : NaN;
-      const created = item.created_at ? Date.parse(item.created_at) : NaN;
-      if (!Number.isNaN(updated)) return updated;
-      if (!Number.isNaN(created)) return created;
-      return 0;
+      var parts = safeText(item.photo_urls).split(',');
+      var out = [];
+      for (var i = 0; i < parts.length; i++) {
+        var v = safeText(parts[i]).trim();
+        if (v) out.push(v);
+      }
+      return out;
     }
 
     function getMainCategories(items) {
-      const cats = Array.from(
-        new Set(
-          items
-            .map(function(i){ return safeText(i.category_l).trim(); })
-            .filter(Boolean)
-        )
-      );
-      cats.sort(function(a, b){ return a.localeCompare(b, 'ja'); });
-      return cats;
-    }
-
-    function getSubCategories(items, mainCategory) {
-      const cats = Array.from(
-        new Set(
-          items
-            .filter(function(i){ return safeText(i.category_l).trim() === mainCategory; })
-            .map(function(i){ return safeText(i.category_m).trim(); })
-            .filter(Boolean)
-        )
-      );
-      cats.sort(function(a, b){ return a.localeCompare(b, 'ja'); });
-      return cats;
-    }
-
-    function refreshFormDatalists() {
-      const l = uniqueSorted(allItems.map(function(i){ return i.category_l; }));
-      const m = uniqueSorted(allItems.map(function(i){ return i.category_m; }));
-      const s = uniqueSorted(allItems.map(function(i){ return i.category_s; }));
-      const locations = uniqueSorted(
-        FIXED_LOCATIONS.concat(masterData.locations || []).concat(allItems.map(function(i){ return i.location; }))
-      );
-
-      setDatalistOptions('category_l_list', l);
-      setDatalistOptions('category_m_list', m);
-      setDatalistOptions('category_s_list', s);
-      setDatalistOptions('location_list', locations);
-    }
-
-    function sortItems(items) {
-      if (activeMainTab === 'new') {
-        return [].concat(items).sort(function(a, b){
-          return getNewestTimestamp(b) - getNewestTimestamp(a);
-        });
+      var arr = [];
+      for (var i = 0; i < items.length; i++) {
+        arr.push(items[i].category_l);
       }
-      return [].concat(items).sort(function(a, b){
-        const an = safeText(a.name);
-        const bn = safeText(b.name);
-        return an.localeCompare(bn, 'ja');
-      });
+      return uniqueSorted(arr);
     }
 
     function renderPhotoPreview() {
@@ -1223,119 +949,105 @@ app.get('/inventory', (req, res) => {
       renderPhotoPreview();
     }
 
-    function openCamera() {
-      els.cameraInput.click();
-    }
-
-    function openPhotoLibrary() {
-      els.photoInput.click();
-    }
-
     function fileToBase64(file) {
       return new Promise(function(resolve, reject) {
-        const reader = new FileReader();
+        var reader = new FileReader();
         reader.onload = function(){ resolve(reader.result); };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
     }
 
-    async function handleSelectedFile(file) {
-      if (!file) return;
-      selectedPhotoBase64 = await fileToBase64(file);
-      renderPhotoPreview();
-    }
+    function refreshFormDatalists() {
+      var l = [];
+      var m = [];
+      var s = [];
+      var locs = FIXED_LOCATIONS.slice();
 
-    function filterItems() {
-      const q = safeText(els.searchInput.value).trim().toLowerCase();
-      let items = [].concat(allItems);
-
-      if (activeMainTab !== 'all' && activeMainTab !== 'new') {
-        items = items.filter(function(i){
-          return safeText(i.category_l).trim() === activeMainTab;
-        });
+      for (var i = 0; i < allItems.length; i++) {
+        l.push(allItems[i].category_l);
+        m.push(allItems[i].category_m);
+        s.push(allItems[i].category_s);
+        locs.push(allItems[i].location);
       }
 
-      if (activeSubTab !== 'all' && activeMainTab !== 'all' && activeMainTab !== 'new') {
-        items = items.filter(function(i){
-          return safeText(i.category_m).trim() === activeSubTab;
-        });
+      if (masterData && masterData.locations) {
+        for (var j = 0; j < masterData.locations.length; j++) {
+          locs.push(masterData.locations[j]);
+        }
       }
 
-      if (q) {
-        items = items.filter(function(i){
-          const hay = [
-            i.name,
-            i.category_l,
-            i.category_m,
-            i.category_s,
-            i.location,
-            i.status
-          ]
-            .map(function(v){ return safeText(v).toLowerCase(); })
-            .join(' ');
-          return hay.includes(q);
-        });
-      }
-
-      filteredItems = sortItems(items);
-      renderSummary(filteredItems);
-      renderSubTabs();
-      renderItems();
+      setDatalistOptions('category_l_list', uniqueSorted(l));
+      setDatalistOptions('category_m_list', uniqueSorted(m));
+      setDatalistOptions('category_s_list', uniqueSorted(s));
+      setDatalistOptions('location_list', uniqueSorted(locs));
     }
 
     function renderMainTabs() {
-      const categories = getMainCategories(allItems);
-      const tabs = [{ key: 'all', label: '在庫一覧' }, { key: 'new', label: '新着' }]
-        .concat(categories.map(function(c){ return { key: c, label: c }; }));
-
-      els.mainTabs.innerHTML = tabs
-        .map(function(tab) {
-          return '<button class="tab ' +
-            (tab.key === activeMainTab ? 'active' : '') +
-            '" onclick="setMainTab(\\'' + escapeHtml(tab.key) + '\\')">' +
-            escapeHtml(tab.label) +
-            '</button>';
-        })
-        .join('');
-    }
-
-    function renderSubTabs() {
-      if (activeMainTab === 'all' || activeMainTab === 'new') {
-        els.subTabs.style.display = 'none';
-        els.subTabs.innerHTML = '';
-        return;
+      var categories = getMainCategories(allItems);
+      var tabs = ['all'];
+      for (var i = 0; i < categories.length; i++) {
+        tabs.push(categories[i]);
       }
 
-      const subCategories = getSubCategories(allItems, activeMainTab);
-      if (!subCategories.length) {
-        els.subTabs.style.display = 'none';
-        els.subTabs.innerHTML = '';
-        return;
+      var html = '';
+      for (var j = 0; j < tabs.length; j++) {
+        var key = tabs[j];
+        var label = key === 'all' ? '在庫一覧' : key;
+        html += '<button class="tab ' + (key === activeMainTab ? 'active' : '') + '" data-tab="' + escapeHtml(key) + '">' + escapeHtml(label) + '</button>';
       }
+      els.mainTabs.innerHTML = html;
 
-      els.subTabs.style.display = 'flex';
-
-      const buttons = [
-        '<button class="subtab ' + (activeSubTab === 'all' ? 'active' : '') + '" onclick="setSubTab(\\'all\\')">すべて</button>'
-      ].concat(
-        subCategories.map(function(c){
-          return '<button class="subtab ' + (c === activeSubTab ? 'active' : '') +
-            '" onclick="setSubTab(\\'' + escapeHtml(c) + '\\')">' +
-            escapeHtml(c) +
-            '</button>';
-        })
-      );
-
-      els.subTabs.innerHTML = buttons.join('');
+      var buttons = els.mainTabs.querySelectorAll('.tab');
+      for (var k = 0; k < buttons.length; k++) {
+        buttons[k].addEventListener('click', function() {
+          activeMainTab = this.getAttribute('data-tab');
+          filterItems();
+        });
+      }
     }
 
     function renderSummary(items) {
       els.summaryCount.textContent = String(items.length);
-      const totalQty = items.reduce(function(sum, item){
-        return sum + Number(item.qty || 0);
-      }, 0);
+      var totalQty = 0;
+      for (var i = 0; i < items.length; i++) {
+        totalQty += Number(items[i].qty || 0);
+      }
       els.summaryQty.textContent = String(totalQty);
+    }
+
+    function filterItems() {
+      var q = safeText(els.searchInput.value).trim().toLowerCase();
+      var items = [];
+
+      for (var i = 0; i < allItems.length; i++) {
+        var item = allItems[i];
+
+        if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
+          continue;
+        }
+
+        if (q) {
+          var hay = [
+            item.name,
+            item.category_l,
+            item.category_m,
+            item.category_s,
+            item.location,
+            item.status
+          ].join(' ').toLowerCase();
+
+          if (hay.indexOf(q) === -1) {
+            continue;
+          }
+        }
+
+        items.push(item);
+      }
+
+      filteredItems = items;
+      renderSummary(filteredItems);
+      renderItems();
     }
 
     function renderItems() {
@@ -1344,109 +1056,63 @@ app.get('/inventory', (req, res) => {
         return;
       }
 
-      els.itemsContainer.innerHTML = filteredItems.map(function(item) {
-        const photos = getPhotoUrls(item);
+      var html = '';
 
-        let thumb = '画像なし';
-        if (photos[0]) {
-          const candidates = buildDriveImageCandidates(photos[0]);
-          const c0 = escapeHtml(candidates[0] || '');
-          const c1 = escapeHtml(candidates[1] || '');
-          const c2 = escapeHtml(candidates[2] || '');
+      for (var i = 0; i < filteredItems.length; i++) {
+        var item = filteredItems[i];
+        var photos = getPhotoUrls(item);
+        var thumb = '画像なし';
+
+        if (photos.length > 0) {
+          var candidates = buildDriveImageCandidates(photos[0]);
+          var c0 = escapeHtml(candidates[0] || '');
+          var c1 = escapeHtml(candidates[1] || '');
+          var c2 = escapeHtml(candidates[2] || '');
 
           thumb = '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
-            ' onerror="if (!this.dataset.f1 && \\'' + c1 + '\\') { this.dataset.f1=\\'1\\'; this.src=\\'' + c1 + '\\'; return; }' +
-            ' if (!this.dataset.f2 && \\'' + c2 + '\\') { this.dataset.f2=\\'1\\'; this.src=\\'' + c2 + '\\'; return; }' +
-            ' this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
+            ' onerror="if(!this.dataset.f1 && \\''
+            + c1 +
+            '\\'){this.dataset.f1=\\'1\\';this.src=\\'' +
+            c1 +
+            '\\';return;} if(!this.dataset.f2 && \\''
+            + c2 +
+            '\\'){this.dataset.f2=\\'1\\';this.src=\\'' +
+            c2 +
+            '\\';return;} this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
             ' />';
         }
 
-        const chips = [
-          item.category_l,
-          item.category_m,
-          item.category_s,
-          item.location
-        ]
-          .map(function(v){ return safeText(v).trim(); })
-          .filter(Boolean)
-          .map(function(v){
-            return '<span class="chip">' + escapeHtml(v) + '</span>';
-          })
-          .join('');
+        var chips = '';
+        var chipValues = [item.category_l, item.category_m, item.category_s, item.location];
+        for (var j = 0; j < chipValues.length; j++) {
+          var cv = safeText(chipValues[j]).trim();
+          if (cv) {
+            chips += '<span class="chip">' + escapeHtml(cv) + '</span>';
+          }
+        }
 
-        const statusText = safeText(item.status);
-        const statusClass = statusText === 'out' ? 'status-out' : '';
+        html += '<div class="item-card">';
+        html +=   '<div class="thumb-box">' + thumb + '</div>';
+        html +=   '<div class="item-main">';
+        html +=     '<div class="item-name">' + escapeHtml(item.name || '') + '</div>';
+        html +=     '<div class="item-meta">状態: ' + escapeHtml(item.status || '') + '</div>';
+        html +=     '<div class="chips">' + chips + '</div>';
+        html +=     '<div class="qty-box">' + escapeHtml(item.qty || 0) + ' ' + escapeHtml(item.unit || '') + '</div>';
+        html +=   '</div>';
+        html += '</div>';
+      }
 
-        return '<div class="item-card">' +
-          '<div class="thumb-box">' + thumb + '</div>' +
-          '<div class="item-main">' +
-            '<div class="item-name">' + escapeHtml(item.name || '') + '</div>' +
-            '<div class="item-meta ' + statusClass + '">状態: ' + escapeHtml(statusText || '') + '</div>' +
-            '<div class="chips">' + chips + '</div>' +
-            '<div class="item-bottom">' +
-              '<div class="qty-box">' +
-                '<span class="qty-num">' + escapeHtml(item.qty || 0) + '</span>' +
-                '<span class="qty-unit">' + escapeHtml(item.unit || '') + '</span>' +
-              '</div>' +
-              '<div class="item-actions">' +
-                '<button class="btn btn-secondary" onclick="openEditModal(\\'' + escapeHtml(item.item_id) + '\\')">編集</button>' +
-                '<button class="btn btn-primary" onclick="openConsumeModal(\\'' + escapeHtml(item.item_id) + '\\')">消費</button>' +
-                '<button class="btn btn-danger" onclick="archiveItem(\\'' + escapeHtml(item.item_id) + '\\',\\'' + escapeHtml(item.name || '') + '\\')">整理</button>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-    }
-
-    function setMainTab(tab) {
-      activeMainTab = tab;
-      activeSubTab = 'all';
-      renderMainTabs();
-      filterItems();
-    }
-
-    function setSubTab(tab) {
-      activeSubTab = tab;
-      filterItems();
-    }
-
-    function goList() {
-      els.screenList.classList.add('active');
-      els.screenForm.classList.remove('active');
-      els.navList.classList.add('active');
-      els.navForm.classList.remove('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function goForm() {
-      els.screenList.classList.remove('active');
-      els.screenForm.classList.add('active');
-      els.navList.classList.remove('active');
-      els.navForm.classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function openModal(title, html) {
-      els.modalTitle.textContent = title;
-      els.modalBody.innerHTML = html;
-      els.modalBackdrop.classList.add('show');
-    }
-
-    function closeModal() {
-      els.modalBackdrop.classList.remove('show');
-      els.modalBody.innerHTML = '';
-      editingItemId = null;
+      els.itemsContainer.innerHTML = html;
     }
 
     async function loadItems() {
-      const responses = await Promise.all([
+      var responses = await Promise.all([
         fetch('/api/items'),
         fetch('/api/master')
       ]);
 
-      const itemsData = await responses[0].json();
-      const masterJson = await responses[1].json();
+      var itemsData = await responses[0].json();
+      var masterJson = await responses[1].json();
 
       if (!Array.isArray(itemsData)) {
         throw new Error(itemsData && itemsData.error ? itemsData.error : '在庫データの取得に失敗しました');
@@ -1463,17 +1129,9 @@ app.get('/inventory', (req, res) => {
       filterItems();
     }
 
-    async function refreshAll() {
-      try {
-        await loadItems();
-      } catch (err) {
-        alert(err.message || '更新に失敗しました');
-      }
-    }
-
     async function createItem() {
       try {
-        const payload = {
+        var payload = {
           name: document.getElementById('name').value.trim(),
           category_l: document.getElementById('category_l').value.trim(),
           category_m: document.getElementById('category_m').value.trim(),
@@ -1493,18 +1151,19 @@ app.get('/inventory', (req, res) => {
           return;
         }
 
-        const res = await fetch('/api/items', {
+        var res = await fetch('/api/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
+        var data = await res.json();
         if (data.error) {
           throw new Error(data.error);
         }
 
         alert('登録しました');
+
         document.getElementById('name').value = '';
         document.getElementById('category_l').value = '';
         document.getElementById('category_m').value = '';
@@ -1517,284 +1176,97 @@ app.get('/inventory', (req, res) => {
         clearSelectedPhoto();
 
         await loadItems();
-        goList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         alert(err.message || '登録に失敗しました');
       }
     }
 
-    async function openEditModal(itemId) {
-      try {
-        const res = await fetch('/api/items/' + encodeURIComponent(itemId));
-        const item = await res.json();
+    els.searchInput.addEventListener('input', filterItems);
 
-        if (item.error) {
-          throw new Error(item.error);
-        }
-
-        editingItemId = itemId;
-        const photos = getPhotoUrls(item);
-
-        let preview = '<div class="photo-preview" style="margin-bottom:12px;">画像なし</div>';
-        if (photos[0]) {
-          const candidates = buildDriveImageCandidates(photos[0]);
-          const c0 = escapeHtml(candidates[0] || '');
-          const c1 = escapeHtml(candidates[1] || '');
-          const c2 = escapeHtml(candidates[2] || '');
-
-          preview = '<div class="photo-preview" style="margin-bottom:12px;">' +
-            '<img src="' + c0 + '" alt=""' +
-            ' onerror="if (!this.dataset.f1 && \\'' + c1 + '\\') { this.dataset.f1=\\'1\\'; this.src=\\'' + c1 + '\\'; return; }' +
-            ' if (!this.dataset.f2 && \\'' + c2 + '\\') { this.dataset.f2=\\'1\\'; this.src=\\'' + c2 + '\\'; return; }' +
-            ' this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
-            ' />' +
-          '</div>';
-        }
-
-        const html =
-          preview +
-          '<div class="grid-2">' +
-            '<div class="field">' +
-              '<label>品名</label>' +
-              '<input id="edit_name" value="' + escapeHtml(item.name || '') + '" />' +
-            '</div>' +
-            '<div class="field">' +
-              '<label>保管場所</label>' +
-              '<input id="edit_location" list="location_list" value="' + escapeHtml(item.location || '') + '" />' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="grid-2">' +
-            '<div class="field">' +
-              '<label>大カテゴリ</label>' +
-              '<input id="edit_category_l" list="category_l_list" value="' + escapeHtml(item.category_l || '') + '" />' +
-            '</div>' +
-            '<div class="field">' +
-              '<label>中カテゴリ</label>' +
-              '<input id="edit_category_m" list="category_m_list" value="' + escapeHtml(item.category_m || '') + '" />' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="grid-2">' +
-            '<div class="field">' +
-              '<label>小カテゴリ</label>' +
-              '<input id="edit_category_s" list="category_s_list" value="' + escapeHtml(item.category_s || '') + '" />' +
-            '</div>' +
-            '<div class="field">' +
-              '<label>単位</label>' +
-              '<input id="edit_unit" value="' + escapeHtml(item.unit || '個') + '" />' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="grid-2">' +
-            '<div class="field">' +
-              '<label>しきい値</label>' +
-              '<input id="edit_threshold" type="number" value="' + escapeHtml(item.threshold ?? '') + '" />' +
-            '</div>' +
-            '<div class="field">' +
-              '<label>担当者</label>' +
-              '<input id="edit_user" placeholder="例: 藤井" />' +
-            '</div>' +
-          '</div>' +
-
-          '<div class="field">' +
-            '<label>メモ</label>' +
-            '<input id="edit_note" placeholder="例: 置き場変更" value="在庫情報更新" />' +
-          '</div>' +
-
-          '<button class="btn btn-primary" style="width:100%;" onclick="submitEdit()">更新する</button>';
-
-        openModal('在庫を編集', html);
-      } catch (err) {
-        alert(err.message || '編集情報の取得に失敗しました');
-      }
-    }
-
-    async function submitEdit() {
-      try {
-        const payload = {
-          item_id: editingItemId,
-          name: document.getElementById('edit_name').value.trim(),
-          category_l: document.getElementById('edit_category_l').value.trim(),
-          category_m: document.getElementById('edit_category_m').value.trim(),
-          category_s: document.getElementById('edit_category_s').value.trim(),
-          location: document.getElementById('edit_location').value.trim(),
-          unit: document.getElementById('edit_unit').value.trim() || '個',
-          threshold: document.getElementById('edit_threshold').value === '' ? '' : Number(document.getElementById('edit_threshold').value || 0),
-          user: document.getElementById('edit_user').value.trim() || 'Unknown',
-          note: document.getElementById('edit_note').value.trim() || '在庫情報更新'
-        };
-
-        const res = await fetch('/api/items/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        closeModal();
-        await loadItems();
-      } catch (err) {
+    els.refreshBtn.addEventListener('click', function() {
+      loadItems().catch(function(err){
         alert(err.message || '更新に失敗しました');
-      }
-    }
-
-    async function openConsumeModal(itemId) {
-      const item = allItems.find(function(i){
-        return safeText(i.item_id) === safeText(itemId);
       });
-      const itemName = item ? safeText(item.name) : '';
-
-      const html =
-        '<div class="field">' +
-          '<label>対象</label>' +
-          '<input value="' + escapeHtml(itemName) + '" disabled />' +
-        '</div>' +
-        '<div class="grid-2">' +
-          '<div class="field">' +
-            '<label>消費数</label>' +
-            '<input id="consume_qty" type="number" value="1" />' +
-          '</div>' +
-          '<div class="field">' +
-            '<label>担当者</label>' +
-            '<input id="consume_user" placeholder="例: 藤井" />' +
-          '</div>' +
-        '</div>' +
-        '<div class="field">' +
-          '<label>メモ</label>' +
-          '<input id="consume_note" value="使用・消費" />' +
-        '</div>' +
-        '<button class="btn btn-primary" style="width:100%;" onclick="submitConsume(\\'' + escapeHtml(itemId) + '\\')">消費する</button>';
-
-      openModal('在庫を消費', html);
-    }
-
-    async function submitConsume(itemId) {
-      try {
-        const payload = {
-          item_id: itemId,
-          consume_qty: Number(document.getElementById('consume_qty').value || 0),
-          user: document.getElementById('consume_user').value.trim() || 'Unknown',
-          note: document.getElementById('consume_note').value.trim() || '使用・消費'
-        };
-
-        if (!payload.consume_qty || payload.consume_qty <= 0) {
-          alert('消費数を入力してください');
-          return;
-        }
-
-        const res = await fetch('/api/items/use', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        closeModal();
-        await loadItems();
-      } catch (err) {
-        alert(err.message || '消費処理に失敗しました');
-      }
-    }
-
-    async function archiveItem(itemId, name) {
-      const ok = confirm(name + ' を整理（アーカイブ）しますか？');
-      if (!ok) return;
-
-      try {
-        const user = prompt('担当者名を入れてください', 'Unknown') || 'Unknown';
-        const note = prompt('メモ', 'アーカイブ') || 'アーカイブ';
-
-        const res = await fetch('/api/items/archive', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            item_id: itemId,
-            user: user,
-            note: note
-          })
-        });
-
-        const data = await res.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
-
-        await loadItems();
-      } catch (err) {
-        alert(err.message || 'アーカイブに失敗しました');
-      }
-    }
-
-    els.searchInput.addEventListener('input', function() {
-      filterItems();
     });
 
-    els.modalBackdrop.addEventListener('click', function(e) {
-      if (e.target === els.modalBackdrop) {
-        closeModal();
-      }
+    els.cameraBtn.addEventListener('click', function() {
+      els.cameraInput.click();
     });
+
+    els.photoBtn.addEventListener('click', function() {
+      els.photoInput.click();
+    });
+
+    els.clearPhotoBtn.addEventListener('click', clearSelectedPhoto);
 
     els.cameraInput.addEventListener('change', async function(e) {
-      const file = e.target.files && e.target.files[0];
+      var file = e.target.files && e.target.files[0];
       if (!file) return;
       try {
-        await handleSelectedFile(file);
+        selectedPhotoBase64 = await fileToBase64(file);
+        renderPhotoPreview();
       } catch (err) {
         alert('画像の読み込みに失敗しました');
       }
     });
 
     els.photoInput.addEventListener('change', async function(e) {
-      const file = e.target.files && e.target.files[0];
+      var file = e.target.files && e.target.files[0];
       if (!file) return;
       try {
-        await handleSelectedFile(file);
+        selectedPhotoBase64 = await fileToBase64(file);
+        renderPhotoPreview();
       } catch (err) {
         alert('画像の読み込みに失敗しました');
       }
     });
 
-    async function boot() {
-      try {
-        renderPhotoPreview();
-        await loadItems();
-      } catch (err) {
-        els.itemsContainer.innerHTML =
-          '<div class="empty">読み込みに失敗しました<br>' +
-          escapeHtml(err.message || '') +
-          '</div>';
-      }
-    }
+    els.createBtn.addEventListener('click', createItem);
 
-    boot();
-
-    window.setMainTab = setMainTab;
-    window.setSubTab = setSubTab;
-    window.refreshAll = refreshAll;
-    window.goList = goList;
-    window.goForm = goForm;
-    window.createItem = createItem;
-    window.openEditModal = openEditModal;
-    window.submitEdit = submitEdit;
-    window.openConsumeModal = openConsumeModal;
-    window.submitConsume = submitConsume;
-    window.archiveItem = archiveItem;
-    window.closeModal = closeModal;
-    window.openCamera = openCamera;
-    window.openPhotoLibrary = openPhotoLibrary;
-    window.clearSelectedPhoto = clearSelectedPhoto;
+    renderPhotoPreview();
+    loadItems().catch(function(err) {
+      els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
+    });
   </script>
 </body>
 </html>
   `);
+});
+
+// ------------------------------------------
+// root / health / logtest
+// ------------------------------------------
+
+app.get('/', (req, res) => {
+  res.send(`
+    <h1>Hello World from LINE GPT Bot + Inventory App!</h1>
+    <ul>
+      <li><a href="/inventory">/inventory</a> 在庫管理画面</li>
+      <li><a href="/health">/health</a> ヘルスチェック</li>
+      <li><a href="/logtest">/logtest</a> ログテスト</li>
+    </ul>
+  `);
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    ok: true,
+    service: 'linebot-inventory-unified',
+    inventoryApiConfigured: !!INVENTORY_API_URL && !!INVENTORY_API_TOKEN,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/logtest', (req, res) => {
+  console.log('🧪 ログ出力テスト成功！');
+  res.send('ログ出力したよ！');
+});
+
+// ------------------------------------------
+// ポート
+// ------------------------------------------
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
