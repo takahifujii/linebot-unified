@@ -422,122 +422,339 @@ app.get('/inventory', (req, res) => {
       --shadow:0 10px 24px rgba(39,47,89,0.08);
     }
     *{ box-sizing:border-box; }
-    html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif; }
+    html,body{
+      margin:0;
+      padding:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
+    }
     body{ padding-bottom:110px; }
-    .app{ max-width:720px; margin:0 auto; min-height:100vh; background:var(--bg); }
+    .app{
+      max-width:720px;
+      margin:0 auto;
+      min-height:100vh;
+      background:var(--bg);
+    }
 
     .topbar{
-      position:sticky; top:0; z-index:20;
+      position:sticky;
+      top:0;
+      z-index:20;
       background:linear-gradient(180deg,#7269ff 0%, #665cff 100%);
-      color:#fff; padding:18px 16px 16px;
+      color:#fff;
+      padding:18px 16px 16px;
       box-shadow:0 8px 22px rgba(72,77,164,0.18);
-      border-bottom-left-radius:22px; border-bottom-right-radius:22px;
+      border-bottom-left-radius:22px;
+      border-bottom-right-radius:22px;
     }
-    .topbar-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .title{ font-size:22px; font-weight:800; letter-spacing:0.02em; }
-    .title-sub{ margin-top:4px; font-size:12px; opacity:0.88; }
+    .topbar-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .title{
+      font-size:22px;
+      font-weight:800;
+      letter-spacing:0.02em;
+    }
+    .title-sub{
+      margin-top:4px;
+      font-size:12px;
+      opacity:0.88;
+    }
     .icon-btn{
-      border:none; background:rgba(255,255,255,0.16); color:#fff;
-      padding:10px 12px; border-radius:12px; cursor:pointer; font-size:14px; min-width:54px;
+      border:none;
+      background:rgba(255,255,255,0.16);
+      color:#fff;
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:14px;
+      min-width:54px;
     }
 
-    .content{ padding:14px 14px 0; }
+    .content{
+      padding:14px 14px 0;
+    }
     .search-card{
-      margin-top:-22px; background:var(--card); border-radius:18px;
-      box-shadow:var(--shadow); padding:14px; margin-bottom:14px;
+      margin-top:-22px;
+      background:var(--card);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin-bottom:14px;
     }
     .search-input{
-      width:100%; border:1px solid var(--line); border-radius:14px;
-      padding:13px 14px; font-size:16px; outline:none; background:#fff;
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:13px 14px;
+      font-size:16px;
+      outline:none;
+      background:#fff;
     }
 
-    .summary{ display:flex; gap:10px; margin-bottom:14px; }
+    .summary{
+      display:flex;
+      gap:10px;
+      margin-bottom:14px;
+    }
     .summary-card{
-      flex:1; background:var(--card); border-radius:16px; padding:14px 12px;
+      flex:1;
+      background:var(--card);
+      border-radius:16px;
+      padding:14px 12px;
       box-shadow:var(--shadow);
     }
-    .summary-label{ font-size:12px; color:var(--muted); margin-bottom:4px; }
-    .summary-value{ font-size:24px; font-weight:800; line-height:1; }
+    .summary-label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:4px;
+    }
+    .summary-value{
+      font-size:24px;
+      font-weight:800;
+      line-height:1;
+    }
 
-    .tabs-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin-bottom:12px; }
+    .tabs-wrap{
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      margin-bottom:12px;
+    }
     .tabs-wrap::-webkit-scrollbar{ display:none; }
-    .tabs{ display:flex; gap:10px; padding:2px 2px 6px; min-width:max-content; }
+    .tabs{
+      display:flex;
+      gap:10px;
+      padding:2px 2px 6px;
+      min-width:max-content;
+    }
     .tab{
-      border:none; background:#fff; border:1px solid var(--line); color:var(--text);
-      border-radius:999px; padding:10px 14px; font-size:14px; white-space:nowrap;
-      cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.02);
+      border:none;
+      background:#fff;
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      font-size:14px;
+      white-space:nowrap;
+      cursor:pointer;
+      box-shadow:0 2px 6px rgba(0,0,0,0.02);
     }
     .tab.active{
-      background:var(--primary); color:#fff; border-color:var(--primary);
+      background:var(--primary);
+      color:#fff;
+      border-color:var(--primary);
       box-shadow:0 8px 16px rgba(108,99,255,0.22);
     }
 
     .subtabs{
-      display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch;
-      scrollbar-width:none; margin-bottom:14px; padding-bottom:2px;
+      display:flex;
+      gap:8px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      margin-bottom:14px;
+      padding-bottom:2px;
     }
     .subtabs::-webkit-scrollbar{ display:none; }
     .subtab{
-      border:none; background:#eef0ff; color:#4e54a3; border-radius:999px;
-      padding:8px 12px; font-size:13px; white-space:nowrap; cursor:pointer;
+      border:none;
+      background:#eef0ff;
+      color:#4e54a3;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:13px;
+      white-space:nowrap;
+      cursor:pointer;
     }
-    .subtab.active{ background:#d8dcff; color:#2d348b; font-weight:700; }
+    .subtab.active{
+      background:#d8dcff;
+      color:#2d348b;
+      font-weight:700;
+    }
 
     .screen{ display:none; }
     .screen.active{ display:block; }
 
-    .items{ display:flex; flex-direction:column; gap:12px; }
+    .items{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
 
     .item-card{
-      background:var(--card); border-radius:20px; padding:12px; box-shadow:var(--shadow);
-      display:flex; gap:12px; align-items:flex-start;
+      background:var(--card);
+      border-radius:20px;
+      padding:12px;
+      box-shadow:var(--shadow);
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
     }
     .thumb-box{
-      width:96px; min-width:96px; height:96px; border-radius:16px; overflow:hidden;
-      background:#eceff8; display:flex; align-items:center; justify-content:center;
-      color:#9aa3b6; font-size:12px;
+      width:96px;
+      min-width:96px;
+      height:96px;
+      border-radius:16px;
+      overflow:hidden;
+      background:#eceff8;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#9aa3b6;
+      font-size:12px;
+      text-align:center;
     }
-    .thumb-box img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .thumb-box img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
 
-    .item-main{ flex:1; min-width:0; }
-    .item-name{ font-size:17px; font-weight:800; margin-bottom:4px; line-height:1.35; word-break:break-word; }
-    .item-meta{ font-size:12px; color:var(--muted); margin-bottom:8px; }
-    .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
-    .chip{ background:#f2f4fb; border-radius:999px; padding:5px 9px; font-size:12px; color:#596178; }
+    .item-main{
+      flex:1;
+      min-width:0;
+    }
+    .item-name{
+      font-size:17px;
+      font-weight:800;
+      margin-bottom:4px;
+      line-height:1.35;
+      word-break:break-word;
+    }
+    .item-meta{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-bottom:10px;
+    }
+    .chip{
+      background:#f2f4fb;
+      border-radius:999px;
+      padding:5px 9px;
+      font-size:12px;
+      color:#596178;
+    }
 
-    .item-bottom{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-    .qty-box{ display:flex; align-items:baseline; gap:4px; color:var(--primary); }
-    .qty-num{ font-size:28px; font-weight:800; line-height:1; }
-    .qty-unit{ font-size:14px; font-weight:700; }
+    .item-bottom{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .qty-box{
+      display:flex;
+      align-items:baseline;
+      gap:4px;
+      color:var(--primary);
+    }
+    .qty-num{
+      font-size:28px;
+      font-weight:800;
+      line-height:1;
+    }
+    .qty-unit{
+      font-size:14px;
+      font-weight:700;
+    }
 
-    .item-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-    .btn{ border:none; border-radius:999px; padding:10px 14px; cursor:pointer; font-size:13px; font-weight:700; }
-    .btn-secondary{ background:#eef0f7; color:#3c455a; }
-    .btn-primary{ background:var(--primary); color:#fff; box-shadow:0 8px 16px rgba(108,99,255,0.22); }
-    .btn-danger{ background:#fff1f1; color:#d94b4b; }
+    .item-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:700;
+    }
+    .btn-secondary{
+      background:#eef0f7;
+      color:#3c455a;
+    }
+    .btn-primary{
+      background:var(--primary);
+      color:#fff;
+      box-shadow:0 8px 16px rgba(108,99,255,0.22);
+    }
+    .btn-danger{
+      background:#fff1f1;
+      color:#d94b4b;
+    }
 
     .empty{
-      text-align:center; color:var(--muted); background:#fff; border-radius:18px;
-      padding:32px 18px; box-shadow:var(--shadow);
+      text-align:center;
+      color:var(--muted);
+      background:#fff;
+      border-radius:18px;
+      padding:32px 18px;
+      box-shadow:var(--shadow);
     }
 
     .form-card{
-      background:#fff; border-radius:20px; padding:16px; box-shadow:var(--shadow); margin-bottom:14px;
+      background:#fff;
+      border-radius:20px;
+      padding:16px;
+      box-shadow:var(--shadow);
+      margin-bottom:14px;
     }
-    .form-title{ font-size:18px; font-weight:800; margin-bottom:12px; }
-    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .field{ margin-bottom:10px; }
-    .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-weight:700; }
+    .form-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:12px;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    .field{
+      margin-bottom:10px;
+    }
+    .field label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-weight:700;
+    }
     .field input,.field textarea{
-      width:100%; border:1px solid var(--line); border-radius:14px;
-      padding:12px 12px; font-size:15px; outline:none; background:#fff;
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px 12px;
+      font-size:15px;
+      outline:none;
+      background:#fff;
     }
 
     .toggle-row{
-      display:flex; align-items:center; gap:10px; padding:10px 12px;
-      border-radius:14px; background:#f7f8fc; margin-bottom:14px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:#f7f8fc;
+      margin-bottom:14px;
     }
-    .toggle-row input{ width:auto; transform:scale(1.15); }
+    .toggle-row input{
+      width:auto;
+      transform:scale(1.15);
+    }
 
     .photo-picker{
       margin-bottom:14px;
@@ -573,6 +790,7 @@ app.get('/inventory', (req, res) => {
       overflow:hidden;
       color:#95a0b6;
       font-size:13px;
+      text-align:center;
     }
     .photo-preview img{
       width:100%;
@@ -582,48 +800,103 @@ app.get('/inventory', (req, res) => {
     }
 
     .bottom-nav{
-      position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%;
-      max-width:720px; background:#fff; border-top:1px solid var(--line);
-      display:flex; justify-content:space-around;
+      position:fixed;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:0;
+      width:100%;
+      max-width:720px;
+      background:#fff;
+      border-top:1px solid var(--line);
+      display:flex;
+      justify-content:space-around;
       padding:10px 10px calc(10px + env(safe-area-inset-bottom));
-      z-index:25; box-shadow:0 -8px 20px rgba(18,28,45,0.06);
+      z-index:25;
+      box-shadow:0 -8px 20px rgba(18,28,45,0.06);
     }
     .nav-btn{
-      border:none; background:none; color:#70788d; font-size:13px; font-weight:700;
-      cursor:pointer; padding:8px 12px; border-radius:12px; min-width:92px;
+      border:none;
+      background:none;
+      color:#70788d;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      padding:8px 12px;
+      border-radius:12px;
+      min-width:92px;
     }
-    .nav-btn.active{ color:var(--primary); background:#f0f1ff; }
+    .nav-btn.active{
+      color:var(--primary);
+      background:#f0f1ff;
+    }
 
     .floating-add{
-      position:fixed; right:18px; bottom:82px; width:58px; height:58px; border:none;
-      border-radius:50%; background:linear-gradient(180deg,var(--primary2),var(--primary));
-      color:#fff; font-size:30px; cursor:pointer;
-      box-shadow:0 14px 24px rgba(108,99,255,0.28); z-index:26;
+      position:fixed;
+      right:18px;
+      bottom:82px;
+      width:58px;
+      height:58px;
+      border:none;
+      border-radius:50%;
+      background:linear-gradient(180deg,var(--primary2),var(--primary));
+      color:#fff;
+      font-size:30px;
+      cursor:pointer;
+      box-shadow:0 14px 24px rgba(108,99,255,0.28);
+      z-index:26;
     }
 
     .modal-backdrop{
-      position:fixed; inset:0; background:rgba(20,24,42,0.45);
-      display:none; align-items:flex-end; z-index:40;
+      position:fixed;
+      inset:0;
+      background:rgba(20,24,42,0.45);
+      display:none;
+      align-items:flex-end;
+      z-index:40;
     }
     .modal-backdrop.show{ display:flex; }
     .modal{
-      width:100%; max-width:720px; margin:0 auto; background:#fff;
-      border-top-left-radius:22px; border-top-right-radius:22px;
-      padding:18px 16px 24px; max-height:88vh; overflow:auto;
+      width:100%;
+      max-width:720px;
+      margin:0 auto;
+      background:#fff;
+      border-top-left-radius:22px;
+      border-top-right-radius:22px;
+      padding:18px 16px 24px;
+      max-height:88vh;
+      overflow:auto;
       box-shadow:0 -8px 24px rgba(0,0,0,0.16);
     }
     .modal-head{
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px; margin-bottom:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:14px;
     }
-    .modal-title{ font-size:18px; font-weight:800; }
+    .modal-title{
+      font-size:18px;
+      font-weight:800;
+    }
     .close-btn{
-      border:none; background:#f2f4f8; color:#4d5568; border-radius:999px;
-      padding:8px 12px; cursor:pointer; font-weight:700;
+      border:none;
+      background:#f2f4f8;
+      color:#4d5568;
+      border-radius:999px;
+      padding:8px 12px;
+      cursor:pointer;
+      font-weight:700;
     }
 
-    .note{ font-size:12px; color:var(--muted); margin-top:6px; }
-    .status-out{ color:#d94b4b; font-weight:700; }
+    .note{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:6px;
+    }
+    .status-out{
+      color:#d94b4b;
+      font-weight:700;
+    }
 
     @media (max-width:520px){
       .grid-2{ grid-template-columns:1fr; }
@@ -698,25 +971,29 @@ app.get('/inventory', (req, res) => {
             </div>
             <div class="field">
               <label>保管場所</label>
-              <input id="location" placeholder="例: 倉庫A" />
+              <input id="location" list="location_list" placeholder="選択または入力" />
+              <datalist id="location_list"></datalist>
             </div>
           </div>
 
           <div class="grid-2">
             <div class="field">
               <label>大カテゴリ</label>
-              <input id="category_l" placeholder="例: みずまわり" />
+              <input id="category_l" list="category_l_list" placeholder="選択または入力" />
+              <datalist id="category_l_list"></datalist>
             </div>
             <div class="field">
               <label>中カテゴリ</label>
-              <input id="category_m" placeholder="例: 蛇口" />
+              <input id="category_m" list="category_m_list" placeholder="選択または入力" />
+              <datalist id="category_m_list"></datalist>
             </div>
           </div>
 
           <div class="grid-2">
             <div class="field">
               <label>小カテゴリ</label>
-              <input id="category_s" placeholder="例: 台所用" />
+              <input id="category_s" list="category_s_list" placeholder="選択または入力" />
+              <datalist id="category_s_list"></datalist>
             </div>
             <div class="field">
               <label>数量</label>
@@ -782,6 +1059,12 @@ app.get('/inventory', (req, res) => {
     let activeSubTab = 'all';
     let editingItemId = null;
     let selectedPhotoBase64 = '';
+    let masterData = {
+      categories: [],
+      locations: []
+    };
+
+    const FIXED_LOCATIONS = ['白鳥', '大谷', '千代ヶ丘', '事務所', '上麻生', '片平'];
 
     const els = {
       searchInput: document.getElementById('searchInput'),
@@ -815,32 +1098,51 @@ app.get('/inventory', (req, res) => {
         .replace(/'/g, '&#39;');
     }
 
-    function normalizeImageUrl(url) {
+    function uniqueSorted(list) {
+      return Array.from(new Set(list.map(v => safeText(v).trim()).filter(Boolean)))
+        .sort((a, b) => a.localeCompare(b, 'ja'));
+    }
+
+    function setDatalistOptions(id, values) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = values
+        .map(v => '<option value="' + escapeHtml(v) + '"></option>')
+        .join('');
+    }
+
+    function extractDriveFileId(url) {
       const raw = safeText(url).trim();
       if (!raw) return '';
 
-      if (raw.includes('uc?export=view&id=')) {
-        return raw;
-      }
+      const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
+      if (fileMatch && fileMatch[1]) return fileMatch[1];
 
-      const fileMatch = raw.match(/\\/file\\/d\\/([^\\/]+)/);
-      if (fileMatch && fileMatch[1]) {
-        return 'https://drive.google.com/uc?export=view&id=' + fileMatch[1];
-      }
+      const idMatch = raw.match(/[?&]id=([^&]+)/);
+      if (idMatch && idMatch[1]) return idMatch[1];
 
-      const openMatch = raw.match(/[?&]id=([^&]+)/);
-      if (openMatch && openMatch[1]) {
-        return 'https://drive.google.com/uc?export=view&id=' + openMatch[1];
-      }
+      return '';
+    }
 
-      return raw;
+    function buildDriveImageCandidates(url) {
+      const raw = safeText(url).trim();
+      if (!raw) return [];
+
+      const fileId = extractDriveFileId(raw);
+      if (!fileId) return [raw];
+
+      return [
+        'https://drive.google.com/thumbnail?id=' + fileId + '&sz=w1000',
+        'https://drive.google.com/uc?export=view&id=' + fileId,
+        'https://drive.google.com/uc?id=' + fileId
+      ];
     }
 
     function getPhotoUrls(item) {
       if (!item.photo_urls) return [];
       return safeText(item.photo_urls)
         .split(',')
-        .map(v => normalizeImageUrl(v))
+        .map(v => v.trim())
         .filter(Boolean);
     }
 
@@ -875,6 +1177,22 @@ app.get('/inventory', (req, res) => {
       );
       cats.sort((a, b) => a.localeCompare(b, 'ja'));
       return cats;
+    }
+
+    function refreshFormDatalists() {
+      const l = uniqueSorted(allItems.map(i => i.category_l));
+      const m = uniqueSorted(allItems.map(i => i.category_m));
+      const s = uniqueSorted(allItems.map(i => i.category_s));
+      const locations = uniqueSorted([
+        ...FIXED_LOCATIONS,
+        ...(masterData.locations || []),
+        ...allItems.map(i => i.location)
+      ]);
+
+      setDatalistOptions('category_l_list', l);
+      setDatalistOptions('category_m_list', m);
+      setDatalistOptions('category_s_list', s);
+      setDatalistOptions('location_list', locations);
     }
 
     function sortItems(items) {
@@ -928,7 +1246,6 @@ app.get('/inventory', (req, res) => {
 
     function filterItems() {
       const q = safeText(els.searchInput.value).trim().toLowerCase();
-
       let items = [...allItems];
 
       if (activeMainTab !== 'all' && activeMainTab !== 'new') {
@@ -970,11 +1287,11 @@ app.get('/inventory', (req, res) => {
       ];
 
       els.mainTabs.innerHTML = tabs
-        .map(tab => \`
-          <button class="tab \${tab.key === activeMainTab ? 'active' : ''}" onclick="setMainTab('\${escapeHtml(tab.key)}')">
-            \${escapeHtml(tab.label)}
+        .map(tab => `
+          <button class="tab ${tab.key === activeMainTab ? 'active' : ''}" onclick="setMainTab('${escapeHtml(tab.key)}')">
+            ${escapeHtml(tab.label)}
           </button>
-        \`)
+        `)
         .join('');
     }
 
@@ -994,12 +1311,12 @@ app.get('/inventory', (req, res) => {
 
       els.subTabs.style.display = 'flex';
       els.subTabs.innerHTML = [
-        \`<button class="subtab \${activeSubTab === 'all' ? 'active' : ''}" onclick="setSubTab('all')">すべて</button>\`,
-        ...subCategories.map(c => \`
-          <button class="subtab \${c === activeSubTab ? 'active' : ''}" onclick="setSubTab('\${escapeHtml(c)}')">
-            \${escapeHtml(c)}
+        `<button class="subtab ${activeSubTab === 'all' ? 'active' : ''}" onclick="setSubTab('all')">すべて</button>`,
+        ...subCategories.map(c => `
+          <button class="subtab ${c === activeSubTab ? 'active' : ''}" onclick="setSubTab('${escapeHtml(c)}')">
+            ${escapeHtml(c)}
           </button>
-        \`)
+        `)
       ].join('');
     }
 
@@ -1011,19 +1328,45 @@ app.get('/inventory', (req, res) => {
 
     function renderItems() {
       if (!filteredItems.length) {
-        els.itemsContainer.innerHTML = \`
+        els.itemsContainer.innerHTML = `
           <div class="empty">
             条件に合う在庫がありません。
           </div>
-        \`;
+        `;
         return;
       }
 
       els.itemsContainer.innerHTML = filteredItems.map(item => {
         const photos = getPhotoUrls(item);
-        const thumb = photos[0]
-          ? \`<img src="\${escapeHtml(photos[0])}" alt="\${escapeHtml(item.name || '')}" />\`
-          : '画像なし';
+
+        let thumb = '画像なし';
+        if (photos[0]) {
+          const candidates = buildDriveImageCandidates(photos[0]);
+          const c0 = escapeHtml(candidates[0] || '');
+          const c1 = escapeHtml(candidates[1] || '');
+          const c2 = escapeHtml(candidates[2] || '');
+
+          thumb = `
+            <img
+              src="${c0}"
+              alt="${escapeHtml(item.name || '')}"
+              onerror="
+                if (!this.dataset.f1 && '${c1}') {
+                  this.dataset.f1='1';
+                  this.src='${c1}';
+                  return;
+                }
+                if (!this.dataset.f2 && '${c2}') {
+                  this.dataset.f2='1';
+                  this.src='${c2}';
+                  return;
+                }
+                this.onerror=null;
+                this.outerHTML='<span>画像なし</span>';
+              "
+            />
+          `;
+        }
 
         const chips = [
           item.category_l,
@@ -1033,35 +1376,35 @@ app.get('/inventory', (req, res) => {
         ]
           .map(v => safeText(v).trim())
           .filter(Boolean)
-          .map(v => \`<span class="chip">\${escapeHtml(v)}</span>\`)
+          .map(v => `<span class="chip">${escapeHtml(v)}</span>`)
           .join('');
 
         const statusText = safeText(item.status);
         const statusClass = statusText === 'out' ? 'status-out' : '';
 
-        return \`
+        return `
           <div class="item-card">
-            <div class="thumb-box">\${thumb}</div>
+            <div class="thumb-box">${thumb}</div>
             <div class="item-main">
-              <div class="item-name">\${escapeHtml(item.name || '')}</div>
-              <div class="item-meta \${statusClass}">
-                状態: \${escapeHtml(statusText || '')}
+              <div class="item-name">${escapeHtml(item.name || '')}</div>
+              <div class="item-meta ${statusClass}">
+                状態: ${escapeHtml(statusText || '')}
               </div>
-              <div class="chips">\${chips}</div>
+              <div class="chips">${chips}</div>
               <div class="item-bottom">
                 <div class="qty-box">
-                  <span class="qty-num">\${escapeHtml(item.qty || 0)}</span>
-                  <span class="qty-unit">\${escapeHtml(item.unit || '')}</span>
+                  <span class="qty-num">${escapeHtml(item.qty || 0)}</span>
+                  <span class="qty-unit">${escapeHtml(item.unit || '')}</span>
                 </div>
                 <div class="item-actions">
-                  <button class="btn btn-secondary" onclick="openEditModal('\${escapeHtml(item.item_id)}')">編集</button>
-                  <button class="btn btn-primary" onclick="openConsumeModal('\${escapeHtml(item.item_id)}')">消費</button>
-                  <button class="btn btn-danger" onclick="archiveItem('\${escapeHtml(item.item_id)}','\${escapeHtml(item.name || '')}')">整理</button>
+                  <button class="btn btn-secondary" onclick="openEditModal('${escapeHtml(item.item_id)}')">編集</button>
+                  <button class="btn btn-primary" onclick="openConsumeModal('${escapeHtml(item.item_id)}')">消費</button>
+                  <button class="btn btn-danger" onclick="archiveItem('${escapeHtml(item.item_id)}','${escapeHtml(item.name || '')}')">整理</button>
                 </div>
               </div>
             </div>
           </div>
-        \`;
+        `;
       }).join('');
     }
 
@@ -1106,12 +1449,25 @@ app.get('/inventory', (req, res) => {
     }
 
     async function loadItems() {
-      const res = await fetch('/api/items');
-      const data = await res.json();
-      if (!Array.isArray(data)) {
-        throw new Error(data?.error || '在庫データの取得に失敗しました');
+      const [itemsRes, masterRes] = await Promise.all([
+        fetch('/api/items'),
+        fetch('/api/master')
+      ]);
+
+      const itemsData = await itemsRes.json();
+      const masterJson = await masterRes.json();
+
+      if (!Array.isArray(itemsData)) {
+        throw new Error(itemsData?.error || '在庫データの取得に失敗しました');
       }
-      allItems = data;
+
+      allItems = itemsData;
+      masterData = {
+        categories: Array.isArray(masterJson?.categories) ? masterJson.categories : [],
+        locations: Array.isArray(masterJson?.locations) ? masterJson.locations : []
+      };
+
+      refreshFormDatalists();
       renderMainTabs();
       filterItems();
     }
@@ -1187,49 +1543,77 @@ app.get('/inventory', (req, res) => {
 
         editingItemId = itemId;
         const photos = getPhotoUrls(item);
-        const preview = photos[0]
-          ? '<div class="photo-preview" style="margin-bottom:12px;"><img src="' + escapeHtml(photos[0]) + '" alt=""></div>'
-          : '<div class="photo-preview" style="margin-bottom:12px;">画像なし</div>';
 
-        openModal('在庫を編集', \`
-          \${preview}
+        let preview = '<div class="photo-preview" style="margin-bottom:12px;">画像なし</div>';
+        if (photos[0]) {
+          const candidates = buildDriveImageCandidates(photos[0]);
+          const c0 = escapeHtml(candidates[0] || '');
+          const c1 = escapeHtml(candidates[1] || '');
+          const c2 = escapeHtml(candidates[2] || '');
+
+          preview = `
+            <div class="photo-preview" style="margin-bottom:12px;">
+              <img
+                src="${c0}"
+                alt=""
+                onerror="
+                  if (!this.dataset.f1 && '${c1}') {
+                    this.dataset.f1='1';
+                    this.src='${c1}';
+                    return;
+                  }
+                  if (!this.dataset.f2 && '${c2}') {
+                    this.dataset.f2='1';
+                    this.src='${c2}';
+                    return;
+                  }
+                  this.onerror=null;
+                  this.outerHTML='<span>画像なし</span>';
+                "
+              />
+            </div>
+          `;
+        }
+
+        openModal('在庫を編集', `
+          ${preview}
           <div class="grid-2">
             <div class="field">
               <label>品名</label>
-              <input id="edit_name" value="\${escapeHtml(item.name || '')}" />
+              <input id="edit_name" value="${escapeHtml(item.name || '')}" />
             </div>
             <div class="field">
               <label>保管場所</label>
-              <input id="edit_location" value="\${escapeHtml(item.location || '')}" />
+              <input id="edit_location" list="location_list" value="${escapeHtml(item.location || '')}" />
             </div>
           </div>
 
           <div class="grid-2">
             <div class="field">
               <label>大カテゴリ</label>
-              <input id="edit_category_l" value="\${escapeHtml(item.category_l || '')}" />
+              <input id="edit_category_l" list="category_l_list" value="${escapeHtml(item.category_l || '')}" />
             </div>
             <div class="field">
               <label>中カテゴリ</label>
-              <input id="edit_category_m" value="\${escapeHtml(item.category_m || '')}" />
+              <input id="edit_category_m" list="category_m_list" value="${escapeHtml(item.category_m || '')}" />
             </div>
           </div>
 
           <div class="grid-2">
             <div class="field">
               <label>小カテゴリ</label>
-              <input id="edit_category_s" value="\${escapeHtml(item.category_s || '')}" />
+              <input id="edit_category_s" list="category_s_list" value="${escapeHtml(item.category_s || '')}" />
             </div>
             <div class="field">
               <label>単位</label>
-              <input id="edit_unit" value="\${escapeHtml(item.unit || '個')}" />
+              <input id="edit_unit" value="${escapeHtml(item.unit || '個')}" />
             </div>
           </div>
 
           <div class="grid-2">
             <div class="field">
               <label>しきい値</label>
-              <input id="edit_threshold" type="number" value="\${escapeHtml(item.threshold ?? '')}" />
+              <input id="edit_threshold" type="number" value="${escapeHtml(item.threshold ?? '')}" />
             </div>
             <div class="field">
               <label>担当者</label>
@@ -1243,7 +1627,7 @@ app.get('/inventory', (req, res) => {
           </div>
 
           <button class="btn btn-primary" style="width:100%;" onclick="submitEdit()">更新する</button>
-        \`);
+        `);
       } catch (err) {
         alert(err.message || '編集情報の取得に失敗しました');
       }
@@ -1286,10 +1670,10 @@ app.get('/inventory', (req, res) => {
       const item = allItems.find(i => safeText(i.item_id) === safeText(itemId));
       const itemName = item ? safeText(item.name) : '';
 
-      openModal('在庫を消費', \`
+      openModal('在庫を消費', `
         <div class="field">
           <label>対象</label>
-          <input value="\${escapeHtml(itemName)}" disabled />
+          <input value="${escapeHtml(itemName)}" disabled />
         </div>
         <div class="grid-2">
           <div class="field">
@@ -1305,8 +1689,8 @@ app.get('/inventory', (req, res) => {
           <label>メモ</label>
           <input id="consume_note" value="使用・消費" />
         </div>
-        <button class="btn btn-primary" style="width:100%;" onclick="submitConsume('\${escapeHtml(itemId)}')">消費する</button>
-      \`);
+        <button class="btn btn-primary" style="width:100%;" onclick="submitConsume('${escapeHtml(itemId)}')">消費する</button>
+      `);
     }
 
     async function submitConsume(itemId) {
@@ -1405,7 +1789,7 @@ app.get('/inventory', (req, res) => {
         renderPhotoPreview();
         await loadItems();
       } catch (err) {
-        els.itemsContainer.innerHTML = \`<div class="empty">読み込みに失敗しました<br>\${escapeHtml(err.message || '')}</div>\`;
+        els.itemsContainer.innerHTML = `<div class="empty">読み込みに失敗しました<br>${escapeHtml(err.message || '')}</div>`;
       }
     }
 
