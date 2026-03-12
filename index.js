@@ -417,6 +417,7 @@ app.get('/inventory', (req, res) => {
       --muted:#7b8397;
       --line:#e6e8f0;
       --primary:#6c63ff;
+      --primary2:#8a84ff;
       --danger:#ff6b6b;
       --shadow:0 10px 24px rgba(39,47,89,0.08);
     }
@@ -428,11 +429,12 @@ app.get('/inventory', (req, res) => {
       color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;
     }
-    body{ padding-bottom:100px; }
+    body{ padding-bottom:90px; }
     .app{
       max-width:720px;
       margin:0 auto;
       min-height:100vh;
+      background:var(--bg);
     }
     .topbar{
       position:sticky;
@@ -451,31 +453,29 @@ app.get('/inventory', (req, res) => {
       justify-content:space-between;
       gap:12px;
     }
-    .title{
-      font-size:22px;
-      font-weight:800;
-    }
-    .title-sub{
-      margin-top:4px;
-      font-size:12px;
-      opacity:.9;
-    }
+    .title{ font-size:22px; font-weight:800; }
+    .title-sub{ margin-top:4px; font-size:12px; opacity:0.88; }
     .icon-btn{
       border:none;
-      background:rgba(255,255,255,.16);
+      background:rgba(255,255,255,0.16);
       color:#fff;
       padding:10px 12px;
       border-radius:12px;
       cursor:pointer;
       font-size:14px;
+      min-width:54px;
     }
-    .content{ padding:14px; }
-    .search-card,.form-card,.summary-card,.item-card{
-      background:#fff;
+
+    .content{ padding:14px 14px 0; }
+
+    .search-card{
+      margin-top:-22px;
+      background:var(--card);
       border-radius:18px;
       box-shadow:var(--shadow);
+      padding:14px;
+      margin-bottom:14px;
     }
-    .search-card{ padding:14px; margin-top:-22px; margin-bottom:14px; }
     .search-input{
       width:100%;
       border:1px solid var(--line);
@@ -485,25 +485,18 @@ app.get('/inventory', (req, res) => {
       outline:none;
       background:#fff;
     }
-    .summary{
-      display:flex;
-      gap:10px;
-      margin-bottom:14px;
-    }
+
+    .summary{ display:flex; gap:10px; margin-bottom:14px; }
     .summary-card{
       flex:1;
+      background:var(--card);
+      border-radius:16px;
       padding:14px 12px;
+      box-shadow:var(--shadow);
     }
-    .summary-label{
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom:4px;
-    }
-    .summary-value{
-      font-size:24px;
-      font-weight:800;
-      line-height:1;
-    }
+    .summary-label{ font-size:12px; color:var(--muted); margin-bottom:4px; }
+    .summary-value{ font-size:24px; font-weight:800; line-height:1; }
+
     .tabs-wrap{
       overflow-x:auto;
       -webkit-overflow-scrolling:touch;
@@ -527,19 +520,24 @@ app.get('/inventory', (req, res) => {
       font-size:14px;
       white-space:nowrap;
       cursor:pointer;
+      box-shadow:0 2px 6px rgba(0,0,0,0.02);
     }
     .tab.active{
       background:var(--primary);
       color:#fff;
       border-color:var(--primary);
+      box-shadow:0 8px 16px rgba(108,99,255,0.22);
     }
-    .items{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
+
+    .screen{ display:block; }
+
+    .items{ display:flex; flex-direction:column; gap:12px; margin-bottom:14px; }
+
     .item-card{
+      background:var(--card);
+      border-radius:20px;
       padding:12px;
+      box-shadow:var(--shadow);
       display:flex;
       gap:12px;
       align-items:flex-start;
@@ -564,10 +562,8 @@ app.get('/inventory', (req, res) => {
       object-fit:cover;
       display:block;
     }
-    .item-main{
-      flex:1;
-      min-width:0;
-    }
+
+    .item-main{ flex:1; min-width:0; }
     .item-name{
       font-size:17px;
       font-weight:800;
@@ -575,17 +571,8 @@ app.get('/inventory', (req, res) => {
       line-height:1.35;
       word-break:break-word;
     }
-    .item-meta{
-      font-size:12px;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
-    .chips{
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
-      margin-bottom:10px;
-    }
+    .item-meta{ font-size:12px; color:var(--muted); margin-bottom:8px; }
+    .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
     .chip{
       background:#f2f4fb;
       border-radius:999px;
@@ -593,11 +580,17 @@ app.get('/inventory', (req, res) => {
       font-size:12px;
       color:#596178;
     }
-    .qty-box{
-      color:var(--primary);
-      font-weight:800;
-      font-size:22px;
+    .item-bottom{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
     }
+    .qty-box{ display:flex; align-items:baseline; gap:4px; color:var(--primary); }
+    .qty-num{ font-size:28px; font-weight:800; line-height:1; }
+    .qty-unit{ font-size:14px; font-weight:700; }
+
     .empty{
       text-align:center;
       color:var(--muted);
@@ -606,23 +599,17 @@ app.get('/inventory', (req, res) => {
       padding:32px 18px;
       box-shadow:var(--shadow);
     }
+
     .form-card{
+      background:#fff;
+      border-radius:20px;
       padding:16px;
-      margin-top:14px;
+      box-shadow:var(--shadow);
+      margin-bottom:14px;
     }
-    .form-title{
-      font-size:18px;
-      font-weight:800;
-      margin-bottom:12px;
-    }
-    .grid-2{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-    .field{
-      margin-bottom:10px;
-    }
+    .form-title{ font-size:18px; font-weight:800; margin-bottom:12px; }
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .field{ margin-bottom:10px; }
     .field label{
       display:block;
       font-size:12px;
@@ -630,7 +617,9 @@ app.get('/inventory', (req, res) => {
       margin-bottom:6px;
       font-weight:700;
     }
-    .field input,.field textarea{
+    .field input,
+    .field select,
+    .field textarea{
       width:100%;
       border:1px solid var(--line);
       border-radius:14px;
@@ -639,6 +628,7 @@ app.get('/inventory', (req, res) => {
       outline:none;
       background:#fff;
     }
+
     .toggle-row{
       display:flex;
       align-items:center;
@@ -648,10 +638,8 @@ app.get('/inventory', (req, res) => {
       background:#f7f8fc;
       margin-bottom:14px;
     }
-    .toggle-row input{
-      width:auto;
-      transform:scale(1.15);
-    }
+    .toggle-row input{ width:auto; transform:scale(1.15); }
+
     .photo-picker{
       margin-bottom:14px;
       border:2px dashed #d8dcef;
@@ -701,11 +689,15 @@ app.get('/inventory', (req, res) => {
       object-fit:cover;
       display:block;
     }
+
+    .bottom-space{ height:18px; }
+
     @media (max-width:520px){
       .grid-2{ grid-template-columns:1fr; }
       .summary{ flex-direction:column; }
       .thumb-box{ width:82px; min-width:82px; height:82px; }
       .item-name{ font-size:16px; }
+      .qty-num{ font-size:26px; }
     }
   </style>
 </head>
@@ -766,29 +758,30 @@ app.get('/inventory', (req, res) => {
           </div>
           <div class="field">
             <label>保管場所</label>
-            <input id="location" list="location_list" placeholder="選択または入力" />
-            <datalist id="location_list"></datalist>
+            <select id="locationSelect"></select>
           </div>
+        </div>
+
+        <div class="field" id="locationOtherWrap" style="display:none;">
+          <label>保管場所（手入力）</label>
+          <input id="locationOther" placeholder="新しい保管場所を入力" />
         </div>
 
         <div class="grid-2">
           <div class="field">
             <label>大カテゴリ</label>
-            <input id="category_l" list="category_l_list" placeholder="選択または入力" />
-            <datalist id="category_l_list"></datalist>
+            <select id="category_l"></select>
           </div>
           <div class="field">
             <label>中カテゴリ</label>
-            <input id="category_m" list="category_m_list" placeholder="選択または入力" />
-            <datalist id="category_m_list"></datalist>
+            <select id="category_m"></select>
           </div>
         </div>
 
         <div class="grid-2">
           <div class="field">
             <label>小カテゴリ</label>
-            <input id="category_s" list="category_s_list" placeholder="選択または入力" />
-            <datalist id="category_s_list"></datalist>
+            <select id="category_s"></select>
           </div>
           <div class="field">
             <label>数量</label>
@@ -825,6 +818,8 @@ app.get('/inventory', (req, res) => {
 
         <button class="btn btn-primary" id="createBtn">登録する</button>
       </div>
+
+      <div class="bottom-space"></div>
     </div>
   </div>
 
@@ -834,6 +829,7 @@ app.get('/inventory', (req, res) => {
     var activeMainTab = 'all';
     var selectedPhotoBase64 = '';
     var masterData = { categories: [], locations: [] };
+
     var FIXED_LOCATIONS = ['白鳥', '大谷', '千代ヶ丘', '事務所', '上麻生', '片平'];
 
     var els = {
@@ -849,7 +845,13 @@ app.get('/inventory', (req, res) => {
       cameraBtn: document.getElementById('cameraBtn'),
       photoBtn: document.getElementById('photoBtn'),
       clearPhotoBtn: document.getElementById('clearPhotoBtn'),
-      createBtn: document.getElementById('createBtn')
+      createBtn: document.getElementById('createBtn'),
+      locationSelect: document.getElementById('locationSelect'),
+      locationOtherWrap: document.getElementById('locationOtherWrap'),
+      locationOther: document.getElementById('locationOther'),
+      categoryL: document.getElementById('category_l'),
+      categoryM: document.getElementById('category_m'),
+      categoryS: document.getElementById('category_s')
     };
 
     function safeText(v) {
@@ -878,16 +880,6 @@ app.get('/inventory', (req, res) => {
       }
       arr.sort(function(a, b){ return a.localeCompare(b, 'ja'); });
       return arr;
-    }
-
-    function setDatalistOptions(id, values) {
-      var el = document.getElementById(id);
-      if (!el) return;
-      var html = '';
-      for (var i = 0; i < values.length; i++) {
-        html += '<option value="' + escapeHtml(values[i]) + '"></option>';
-      }
-      el.innerHTML = html;
     }
 
     function extractDriveFileId(url) {
@@ -928,10 +920,16 @@ app.get('/inventory', (req, res) => {
 
     function getMainCategories(items) {
       var arr = [];
-      for (var i = 0; i < items.length; i++) {
-        arr.push(items[i].category_l);
-      }
+      for (var i = 0; i < items.length; i++) arr.push(items[i].category_l);
       return uniqueSorted(arr);
+    }
+
+    function setSelectOptions(selectEl, values, placeholder) {
+      var html = '<option value="">' + escapeHtml(placeholder || '選択してください') + '</option>';
+      for (var i = 0; i < values.length; i++) {
+        html += '<option value="' + escapeHtml(values[i]) + '">' + escapeHtml(values[i]) + '</option>';
+      }
+      selectEl.innerHTML = html;
     }
 
     function renderPhotoPreview() {
@@ -958,37 +956,85 @@ app.get('/inventory', (req, res) => {
       });
     }
 
-    function refreshFormDatalists() {
-      var l = [];
-      var m = [];
-      var s = [];
-      var locs = FIXED_LOCATIONS.slice();
-
+    function buildCategoryTree() {
+      var tree = {};
       for (var i = 0; i < allItems.length; i++) {
-        l.push(allItems[i].category_l);
-        m.push(allItems[i].category_m);
-        s.push(allItems[i].category_s);
-        locs.push(allItems[i].location);
-      }
-
-      if (masterData && masterData.locations) {
-        for (var j = 0; j < masterData.locations.length; j++) {
-          locs.push(masterData.locations[j]);
+        var l = safeText(allItems[i].category_l).trim();
+        var m = safeText(allItems[i].category_m).trim();
+        var s = safeText(allItems[i].category_s).trim();
+        if (!l) continue;
+        if (!tree[l]) tree[l] = {};
+        if (m) {
+          if (!tree[l][m]) tree[l][m] = [];
+          if (s && tree[l][m].indexOf(s) === -1) tree[l][m].push(s);
         }
       }
 
-      setDatalistOptions('category_l_list', uniqueSorted(l));
-      setDatalistOptions('category_m_list', uniqueSorted(m));
-      setDatalistOptions('category_s_list', uniqueSorted(s));
-      setDatalistOptions('location_list', uniqueSorted(locs));
+      var mainKeys = Object.keys(tree).sort(function(a,b){ return a.localeCompare(b,'ja'); });
+      for (var j = 0; j < mainKeys.length; j++) {
+        var mk = mainKeys[j];
+        var mids = Object.keys(tree[mk]);
+        mids.sort(function(a,b){ return a.localeCompare(b,'ja'); });
+        for (var k = 0; k < mids.length; k++) {
+          tree[mk][mids[k]].sort(function(a,b){ return a.localeCompare(b,'ja'); });
+        }
+      }
+      return tree;
+    }
+
+    function refreshCategorySelects() {
+      var tree = buildCategoryTree();
+      var mains = Object.keys(tree).sort(function(a,b){ return a.localeCompare(b,'ja'); });
+      setSelectOptions(els.categoryL, mains, '大カテゴリを選択');
+
+      var selectedL = els.categoryL.value;
+      if (!selectedL || !tree[selectedL]) {
+        setSelectOptions(els.categoryM, [], '中カテゴリを選択');
+        setSelectOptions(els.categoryS, [], '小カテゴリを選択');
+        return;
+      }
+
+      var mids = Object.keys(tree[selectedL]).sort(function(a,b){ return a.localeCompare(b,'ja'); });
+      setSelectOptions(els.categoryM, mids, '中カテゴリを選択');
+
+      var selectedM = els.categoryM.value;
+      if (!selectedM || !tree[selectedL][selectedM]) {
+        setSelectOptions(els.categoryS, [], '小カテゴリを選択');
+        return;
+      }
+
+      setSelectOptions(els.categoryS, tree[selectedL][selectedM], '小カテゴリを選択');
+    }
+
+    function refreshLocationSelect() {
+      var locs = FIXED_LOCATIONS.slice();
+      if (masterData && masterData.locations) {
+        for (var i = 0; i < masterData.locations.length; i++) locs.push(masterData.locations[i]);
+      }
+      for (var j = 0; j < allItems.length; j++) locs.push(allItems[j].location);
+      locs = uniqueSorted(locs);
+
+      var html = '<option value="">保管場所を選択</option>';
+      for (var k = 0; k < locs.length; k++) {
+        html += '<option value="' + escapeHtml(locs[k]) + '">' + escapeHtml(locs[k]) + '</option>';
+      }
+      html += '<option value="__other__">その他（手入力）</option>';
+      els.locationSelect.innerHTML = html;
+    }
+
+    function updateLocationOtherVisibility() {
+      if (els.locationSelect.value === '__other__') {
+        els.locationOtherWrap.style.display = 'block';
+      } else {
+        els.locationOtherWrap.style.display = 'none';
+        els.locationOther.value = '';
+      }
     }
 
     function renderMainTabs() {
       var categories = getMainCategories(allItems);
       var tabs = ['all'];
-      for (var i = 0; i < categories.length; i++) {
-        tabs.push(categories[i]);
-      }
+      for (var i = 0; i < categories.length; i++) tabs.push(categories[i]);
 
       var html = '';
       for (var j = 0; j < tabs.length; j++) {
@@ -1010,9 +1056,7 @@ app.get('/inventory', (req, res) => {
     function renderSummary(items) {
       els.summaryCount.textContent = String(items.length);
       var totalQty = 0;
-      for (var i = 0; i < items.length; i++) {
-        totalQty += Number(items[i].qty || 0);
-      }
+      for (var i = 0; i < items.length; i++) totalQty += Number(items[i].qty || 0);
       els.summaryQty.textContent = String(totalQty);
     }
 
@@ -1029,17 +1073,10 @@ app.get('/inventory', (req, res) => {
 
         if (q) {
           var hay = [
-            item.name,
-            item.category_l,
-            item.category_m,
-            item.category_s,
-            item.location,
-            item.status
+            item.name, item.category_l, item.category_m, item.category_s, item.location, item.status
           ].join(' ').toLowerCase();
 
-          if (hay.indexOf(q) === -1) {
-            continue;
-          }
+          if (hay.indexOf(q) === -1) continue;
         }
 
         items.push(item);
@@ -1086,9 +1123,7 @@ app.get('/inventory', (req, res) => {
         var chipValues = [item.category_l, item.category_m, item.category_s, item.location];
         for (var j = 0; j < chipValues.length; j++) {
           var cv = safeText(chipValues[j]).trim();
-          if (cv) {
-            chips += '<span class="chip">' + escapeHtml(cv) + '</span>';
-          }
+          if (cv) chips += '<span class="chip">' + escapeHtml(cv) + '</span>';
         }
 
         html += '<div class="item-card">';
@@ -1097,7 +1132,9 @@ app.get('/inventory', (req, res) => {
         html +=     '<div class="item-name">' + escapeHtml(item.name || '') + '</div>';
         html +=     '<div class="item-meta">状態: ' + escapeHtml(item.status || '') + '</div>';
         html +=     '<div class="chips">' + chips + '</div>';
-        html +=     '<div class="qty-box">' + escapeHtml(item.qty || 0) + ' ' + escapeHtml(item.unit || '') + '</div>';
+        html +=     '<div class="item-bottom">';
+        html +=       '<div class="qty-box"><span class="qty-num">' + escapeHtml(item.qty || 0) + '</span><span class="qty-unit">' + escapeHtml(item.unit || '') + '</span></div>';
+        html +=     '</div>';
         html +=   '</div>';
         html += '</div>';
       }
@@ -1124,19 +1161,25 @@ app.get('/inventory', (req, res) => {
         locations: Array.isArray(masterJson && masterJson.locations) ? masterJson.locations : []
       };
 
-      refreshFormDatalists();
+      refreshLocationSelect();
+      refreshCategorySelects();
       renderMainTabs();
       filterItems();
     }
 
     async function createItem() {
       try {
+        var locationValue = els.locationSelect.value;
+        if (locationValue === '__other__') {
+          locationValue = safeText(els.locationOther.value).trim();
+        }
+
         var payload = {
           name: document.getElementById('name').value.trim(),
-          category_l: document.getElementById('category_l').value.trim(),
-          category_m: document.getElementById('category_m').value.trim(),
-          category_s: document.getElementById('category_s').value.trim(),
-          location: document.getElementById('location').value.trim(),
+          category_l: els.categoryL.value.trim(),
+          category_m: els.categoryM.value.trim(),
+          category_s: els.categoryS.value.trim(),
+          location: locationValue,
           qty: Number(document.getElementById('qty').value || 0),
           unit: document.getElementById('unit').value.trim() || '個',
           threshold: document.getElementById('threshold').value === '' ? '' : Number(document.getElementById('threshold').value || 0),
@@ -1150,6 +1193,14 @@ app.get('/inventory', (req, res) => {
           alert('品名を入力してください');
           return;
         }
+        if (!payload.location) {
+          alert('保管場所を選択または入力してください');
+          return;
+        }
+        if (!payload.category_l) {
+          alert('大カテゴリを選択してください');
+          return;
+        }
 
         var res = await fetch('/api/items', {
           method: 'POST',
@@ -1158,17 +1209,16 @@ app.get('/inventory', (req, res) => {
         });
 
         var data = await res.json();
-        if (data.error) {
-          throw new Error(data.error);
-        }
+        if (data.error) throw new Error(data.error);
 
         alert('登録しました');
 
         document.getElementById('name').value = '';
-        document.getElementById('category_l').value = '';
-        document.getElementById('category_m').value = '';
-        document.getElementById('category_s').value = '';
-        document.getElementById('location').value = '';
+        els.locationSelect.value = '';
+        els.locationOther.value = '';
+        updateLocationOtherVisibility();
+        els.categoryL.value = '';
+        refreshCategorySelects();
         document.getElementById('qty').value = '1';
         document.getElementById('unit').value = '個';
         document.getElementById('threshold').value = '0';
@@ -1220,6 +1270,19 @@ app.get('/inventory', (req, res) => {
       } catch (err) {
         alert('画像の読み込みに失敗しました');
       }
+    });
+
+    els.locationSelect.addEventListener('change', updateLocationOtherVisibility);
+
+    els.categoryL.addEventListener('change', function() {
+      els.categoryM.value = '';
+      els.categoryS.value = '';
+      refreshCategorySelects();
+    });
+
+    els.categoryM.addEventListener('change', function() {
+      els.categoryS.value = '';
+      refreshCategorySelects();
     });
 
     els.createBtn.addEventListener('click', createItem);
