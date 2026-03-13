@@ -1426,15 +1426,21 @@ app.get('/inventory', (req, res) => {
       if (smallList.includes(prevS)) els.categoryS.value = prevS;
     }
 
-    function refreshLocationSelect() {
-      const locations = uniqueSorted(masterLocations);
-      let html = '<option value="">保管場所を選択</option>';
-      locations.forEach((loc) => {
-        html += '<option value="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</option>';
-      });
-      html += '<option value="__other__">その他</option>';
-      els.locationSelect.innerHTML = html;
-    }
+   function refreshLocationSelect() {
+  const locations = uniqueSorted(masterLocations);
+  let html = '<option value="">保管場所を選択</option>';
+
+  locations.forEach((loc) => {
+    html += '<option value="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</option>';
+  });
+
+  html += '<option value="__other__">その他</option>';
+  els.locationSelect.innerHTML = html;
+
+  if (locations.includes('白鳥')) {
+    els.locationSelect.value = '白鳥';
+  }
+}
 
     function updateLocationOtherVisibility() {
       if (els.locationSelect.value === '__other__') {
