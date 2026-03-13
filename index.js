@@ -454,7 +454,7 @@ app.get('/inventory', (req, res) => {
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <style>
   body {
-  font-size:14px;
+  font-size:12px;
 }
     :root{
       --bg:#0b1636;
