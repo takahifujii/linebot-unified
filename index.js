@@ -17,6 +17,9 @@ const app = express();
 
 const INVENTORY_API_URL = process.env.INVENTORY_API_URL;
 const INVENTORY_API_TOKEN = process.env.INVENTORY_API_TOKEN;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
 // ------------------------------------------
 // PWA設定
