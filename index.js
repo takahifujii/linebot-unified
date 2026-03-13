@@ -444,7 +444,7 @@ app.get('/inventory', (req, res) => {
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=0.8, viewport-fit=cover" />
   <title>E!stocks</title>
   <meta name="theme-color" content="#7c74ff" />
   <link rel="manifest" href="/manifest.json" />
