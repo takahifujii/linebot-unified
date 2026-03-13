@@ -444,8 +444,8 @@ app.get('/inventory', (req, res) => {
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>E!stockS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, viewport-fit=cover" />
+  <title>E!stocks</title>
   <meta name="theme-color" content="#7c74ff" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
@@ -453,6 +453,9 @@ app.get('/inventory', (req, res) => {
   <meta name="apple-mobile-web-app-title" content="E!stockS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <style>
+  body {
+  font-size:14px;
+}
     :root{
       --bg:#0b1636;
       --card:#1e2b4b;
