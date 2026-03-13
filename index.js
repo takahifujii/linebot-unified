@@ -119,6 +119,57 @@ function unwrapGasResponse(gasResponse) {
   return gasResponse.data;
 }
 // ------------------------------------------
+// RAG / Knowledge Search Helpers
+// ------------------------------------------
+async function createQuestionEmbedding(text) {
+  const response = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: text,
+  });
+
+  return response.data[0].embedding;
+}
+
+async function searchKnowledge(message, matchCount = 5) {
+  const embedding = await createQuestionEmbedding(message);
+
+  const { data, error } = await supabase.rpc('match_knowledge', {
+    query_embedding: embedding,
+    match_count: matchCount,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return Array.isArray(data) ? data : [];
+}
+
+function buildKnowledgeContext(results) {
+  if (!results || results.length === 0) {
+    return '関連する教科書データは見つかりませんでした。';
+  }
+
+  return results
+    .map((row, index) => {
+      const title = row.title || '無題';
+      const content = row.content || '';
+      const similarity =
+        typeof row.similarity === 'number'
+          ? row.similarity.toFixed(4)
+          : 'n/a';
+
+      return [
+        `【参考${index + 1}】`,
+        `タイトル: ${title}`,
+        `類似度: ${similarity}`,
+        `内容:`,
+        content,
+      ].join('\n');
+    })
+    .join('\n\n----------------------\n\n');
+}
+// ------------------------------------------
 // GPTに問い合わせる関数（RAG対応版）
 // ------------------------------------------
 async function getGptResponse(message) {
