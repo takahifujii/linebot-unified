@@ -3,6 +3,8 @@ import { Client, middleware } from '@line/bot-sdk';
 import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import OpenAI from 'openai';
+import { createClient } from '@supabase/supabase-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,10 +18,15 @@ const client = new Client(config);
 const app = express();
 
 const INVENTORY_API_URL = process.env.INVENTORY_API_URL;
-const INVENTORY_API_TOKEN = process.env.INVENTORY_API_TOKEN;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const INVENTORY_API_TOKEN = process.env.INVENTORY_API_TOKEN;const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+
+const openai = new OpenAI({
+  apiKey: OPENAI_API_KEY,
+});
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
 // ------------------------------------------
 // PWA設定
