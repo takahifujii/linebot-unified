@@ -188,7 +188,7 @@ async function createQuestionEmbedding(text) {
   return response.data[0].embedding;
 }
 
-async function searchKnowledge(message, matchCount = 5, minSimilarity = 0.70) {
+async function searchKnowledge(message, matchCount = 8, minSimilarity = 0.70) {
   const embedding = await createQuestionEmbedding(message);
 
   const { data, error } = await supabase.rpc('match_knowledge', {
@@ -241,7 +241,7 @@ async function getGptResponse(message, history = []) {
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_SECRET_KEY);
 
-  const knowledgeResults = await searchKnowledge(message, 5);
+  const knowledgeResults = await searchKnowledge(message, 8);
   const knowledgeContext = buildKnowledgeContext(knowledgeResults);
 
 const systemPrompt = `
