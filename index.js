@@ -45,14 +45,14 @@ app.get('/manifest.json', (req, res) => {
       {
         src: '/icon-192.png',
         sizes: '192x192',
-        type: 'image/png'
+        type: 'image/png',
       },
       {
         src: '/icon-512.png',
         sizes: '512x512',
-        type: 'image/png'
-      }
-    ]
+        type: 'image/png',
+      },
+    ],
   }));
 });
 
@@ -188,29 +188,110 @@ async function createQuestionEmbedding(text) {
   return response.data[0].embedding;
 }
 
-async function searchKnowledge(message, matchCount = 8, minSimilarity = 0.70) {
-  const embedding = await createQuestionEmbedding(message);
+function normalizeQuery(text) {
+  return String(text || '')
+    .replace(/[　\s]+/g, ' ')
+    .trim();
+}
 
-  const { data, error } = await supabase.rpc('match_knowledge', {
-    query_embedding: embedding,
-    match_count: matchCount,
-  });
+function expandKnowledgeQueries(message) {
+  const base = normalizeQuery(message);
+  const queries = new Set();
 
-  if (error) {
-    throw error;
+  if (!base) {
+    return [];
   }
 
-  const rows = Array.isArray(data) ? data : [];
+  queries.add(base);
+  queries.add(`${base} 現調`);
+  queries.add(`${base} 確認事項`);
+  queries.add(`${base} 測り方`);
+  queries.add(`${base} 寸法`);
 
-  return rows.filter((row) => {
-    if (typeof row.similarity !== 'number') return true;
-    return row.similarity >= minSimilarity;
-  });
+  if (base.includes('トイレ')) {
+    queries.add(`${base} 排水`);
+    queries.add(`${base} 床排水 壁排水`);
+    queries.add(`${base} 排水位置`);
+  }
+
+  if (base.includes('排水芯')) {
+    queries.add(base.replace(/排水芯/g, '排水位置'));
+    queries.add(base.replace(/排水芯/g, '芯寸法'));
+    queries.add(base.replace(/排水芯/g, '床排水 壁排水'));
+    queries.add(`${base} 品番 キャップ`);
+  }
+
+  if (base.includes('現調') || base.includes('現場調査')) {
+    queries.add(`${base} チェックポイント`);
+    queries.add(`${base} 注意点`);
+  }
+
+  return Array.from(queries).slice(0, 8);
+}
+
+async function searchKnowledge(message, matchCount = 8, minSimilarity = 0.65) {
+  const queries = expandKnowledgeQueries(message);
+  const allRows = [];
+
+  for (const q of queries) {
+    const embedding = await createQuestionEmbedding(q);
+
+    const { data, error } = await supabase.rpc('match_knowledge', {
+      query_embedding: embedding,
+      match_count: matchCount,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (Array.isArray(data)) {
+      allRows.push(
+        ...data.map((row) => ({
+          ...row,
+          search_query: q,
+        }))
+      );
+    }
+  }
+
+  const dedupedMap = new Map();
+
+  for (const row of allRows) {
+    const key = String(row.id ?? `${row.title}-${row.content?.slice(0, 50) ?? ''}`);
+    const current = dedupedMap.get(key);
+
+    if (!current) {
+      dedupedMap.set(key, row);
+      continue;
+    }
+
+    const currentSim =
+      typeof current.similarity === 'number' ? current.similarity : -1;
+    const rowSim =
+      typeof row.similarity === 'number' ? row.similarity : -1;
+
+    if (rowSim > currentSim) {
+      dedupedMap.set(key, row);
+    }
+  }
+
+  return Array.from(dedupedMap.values())
+    .filter((row) => {
+      if (typeof row.similarity !== 'number') return true;
+      return row.similarity >= minSimilarity;
+    })
+    .sort((a, b) => {
+      const aSim = typeof a.similarity === 'number' ? a.similarity : -1;
+      const bSim = typeof b.similarity === 'number' ? b.similarity : -1;
+      return bSim - aSim;
+    })
+    .slice(0, 10);
 }
 
 function buildKnowledgeContext(results) {
   if (!results || results.length === 0) {
-    return '関連する教科書データは見つかりませんでした。';
+    return '今回の検索では、関連する教科書データを十分に特定できませんでした。教科書に載っていないとは断定せず、関連表現も含めて慎重に回答してください。';
   }
 
   return results
@@ -221,16 +302,18 @@ function buildKnowledgeContext(results) {
         typeof row.similarity === 'number'
           ? row.similarity.toFixed(4)
           : 'n/a';
+      const searchQuery = row.search_query || 'n/a';
 
       return [
-        `【参考${index + 1}】`,
-        `タイトル: ${title}`,
-        `類似度: ${similarity}`,
-        `内容:`,
+        `【根拠資料${index + 1}】`,
+        `資料名: ${title}`,
+        `関連度: ${similarity}`,
+        `ヒットした検索語: ${searchQuery}`,
+        `以下は原文抜粋:`,
         content,
       ].join('\n');
     })
-    .join('\n\n----------------------\n\n');
+    .join('\n\n====================\n\n');
 }
 
 // ------------------------------------------
@@ -241,10 +324,10 @@ async function getGptResponse(message, history = []) {
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_SECRET_KEY);
 
-  const knowledgeResults = await searchKnowledge(message, 8);
+  const knowledgeResults = await searchKnowledge(message, 8, 0.65);
   const knowledgeContext = buildKnowledgeContext(knowledgeResults);
 
-const systemPrompt = `
+  const systemPrompt = `
 あなたはリフォーム工房アントレの社内AIサポートキャラクター「ねじーくん」です。
 社員に対して、親しみやすく丁寧に、語尾に「だじ〜」「だじ！」をつけて話してください。
 以下の社内業務ルール・用語集・教科書データに基づいて、新人社員の質問にやさしく自然に答えてください。
@@ -258,6 +341,14 @@ const systemPrompt = `
 - 危険がある施工・電気・ガス・法規関係は断定しすぎず、必要なら有資格者確認を促すこと
 - 専門用語は新人にもわかるように補足すること
 
+【根拠確認の強制ルール】
+- 「教科書に載っていない」と答える場合は、関連する可能性のある教科書箇所を再確認してからにすること
+- 「教科書の該当箇所」が示せないのに、「載っていない」と断定してはいけない
+- 関連箇所が見つかったら、必ずその文章を先に示してから結論を述べること
+- 教科書の表現と質問の表現が違う可能性を常に考えること
+- たとえば「排水芯」は「床排水」「壁排水」「排水位置」「芯寸法」「品番」「キャップ」などの関連表現も確認対象にすること
+- 根拠候補があるのに「該当箇所は明確ではない」とだけ答えてはいけない
+
 【回答フォーマット】
 回答は原則として次の順で出すこと。
 
@@ -267,7 +358,8 @@ const systemPrompt = `
 2. 教科書の該当箇所
 - 参考データの文章を、できるだけ原文に近い形で短く示すこと
 - 長すぎる引用は避け、要点部分を2〜4行程度で示すこと
-- 教科書に該当箇所が薄い場合は、「該当箇所は明確ではないだじ〜」と述べること
+- 根拠がある場合は必ず示すこと
+- 本当に根拠が薄いときだけ、「今回参照した教科書データの範囲では明確に確認できないだじ〜」と述べること
 
 3. ねじーくんの補足
 - 新人向けにやさしく意味や実務上の注意を補足すること
@@ -424,20 +516,20 @@ A：「だじ〜、仕入率 ÷ 粗利係数で販売率が出るから、それ
 【口調のルール】
 ・やさしく親しみやすく、「〜してみるだじ？」「〜だじね！」など励ます語調を意識
 ・Yes/No系質問はルールベースで明確に回答すること
-
-【教科書データ】
-${knowledgeContext}
 `;
-
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
       { role: 'system', content: systemPrompt },
+      {
+        role: 'system',
+        content: `以下は今回参照すべき教科書データです。必ずこの内容を優先して答えてください。\n\n${knowledgeContext}`,
+      },
       ...history,
       { role: 'user', content: message },
     ],
-    temperature: 0.4,
+    temperature: 0.2,
   });
 
   return response.choices[0].message.content || 'うまく答えを作れなかっただじ〜';
