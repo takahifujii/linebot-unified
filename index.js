@@ -18,7 +18,8 @@ const client = new Client(config);
 const app = express();
 
 const INVENTORY_API_URL = process.env.INVENTORY_API_URL;
-const INVENTORY_API_TOKEN = process.env.INVENTORY_API_TOKEN;const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const INVENTORY_API_TOKEN = process.env.INVENTORY_API_TOKEN;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
@@ -34,8 +35,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
   res.send(JSON.stringify({
-    name: 'E!stockS',
-    short_name: 'E!stockS',
+    name: 'E!stocks',
+    short_name: 'E!stocks',
     start_url: '/inventory',
     display: 'standalone',
     background_color: '#0b1636',
@@ -109,6 +110,7 @@ async function callInventoryPost(action, payload = {}) {
 
   return response.data;
 }
+
 function unwrapGasResponse(gasResponse) {
   if (!gasResponse) {
     throw new Error('GASから応答がありません');
@@ -125,6 +127,55 @@ function unwrapGasResponse(gasResponse) {
 
   return gasResponse.data;
 }
+
+// ------------------------------------------
+// 会話履歴ヘルパー
+// ------------------------------------------
+async function getConversationHistory(userId, limit = 6) {
+  requireEnv('SUPABASE_URL', SUPABASE_URL);
+  requireEnv('SUPABASE_SECRET_KEY', SUPABASE_SECRET_KEY);
+
+  const { data, error } = await supabase
+    .from('conversation_history')
+    .select('role, content, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw error;
+  }
+
+  const rows = Array.isArray(data) ? data : [];
+
+  return rows
+    .reverse()
+    .map((row) => ({
+      role: row.role,
+      content: row.content,
+    }))
+    .filter((row) => row.role && row.content);
+}
+
+async function saveConversationTurn(userId, role, content) {
+  requireEnv('SUPABASE_URL', SUPABASE_URL);
+  requireEnv('SUPABASE_SECRET_KEY', SUPABASE_SECRET_KEY);
+
+  const { error } = await supabase
+    .from('conversation_history')
+    .insert([
+      {
+        user_id: userId,
+        role,
+        content,
+      },
+    ]);
+
+  if (error) {
+    throw error;
+  }
+}
+
 // ------------------------------------------
 // RAG / Knowledge Search Helpers
 // ------------------------------------------
@@ -137,7 +188,7 @@ async function createQuestionEmbedding(text) {
   return response.data[0].embedding;
 }
 
-async function searchKnowledge(message, matchCount = 5) {
+async function searchKnowledge(message, matchCount = 5, minSimilarity = 0.70) {
   const embedding = await createQuestionEmbedding(message);
 
   const { data, error } = await supabase.rpc('match_knowledge', {
@@ -149,7 +200,12 @@ async function searchKnowledge(message, matchCount = 5) {
     throw error;
   }
 
-  return Array.isArray(data) ? data : [];
+  const rows = Array.isArray(data) ? data : [];
+
+  return rows.filter((row) => {
+    if (typeof row.similarity !== 'number') return true;
+    return row.similarity >= minSimilarity;
+  });
 }
 
 function buildKnowledgeContext(results) {
@@ -176,10 +232,11 @@ function buildKnowledgeContext(results) {
     })
     .join('\n\n----------------------\n\n');
 }
+
 // ------------------------------------------
-// GPTに問い合わせる関数（RAG対応版）
+// GPTに問い合わせる関数（RAG + 会話履歴対応版）
 // ------------------------------------------
-async function getGptResponse(message) {
+async function getGptResponse(message, history = []) {
   requireEnv('OPENAI_API_KEY', OPENAI_API_KEY);
   requireEnv('SUPABASE_URL', SUPABASE_URL);
   requireEnv('SUPABASE_SECRET_KEY', SUPABASE_SECRET_KEY);
@@ -204,6 +261,11 @@ async function getGptResponse(message) {
 - 教科書に書いてあることを勝手にねじ曲げないこと
 - 不明点は不明と言うこと
 - 危険がある施工・電気・ガス・法規関係は断定しすぎず、必要なら有資格者確認を促すこと
+
+【会話継続ルール】
+- 直前までの会話履歴も参考にして答えること
+- ただし、履歴よりも教科書データの根拠を優先すること
+- 会話の流れに引っ張られて、教科書にないことを断定しないこと
 
 【現調キーワードへの特別対応】
 ユーザーが「現調」「現場調査」「下見」などを聞いている場合は、
@@ -243,6 +305,7 @@ ${knowledgeContext}
     model: 'gpt-4o-mini',
     messages: [
       { role: 'system', content: systemPrompt },
+      ...history,
       { role: 'user', content: message },
     ],
     temperature: 0.4,
@@ -261,13 +324,33 @@ async function handleEvent(event) {
     return Promise.resolve(null);
   }
 
+  const userId = event?.source?.userId || 'unknown';
   const userMessage = event.message.text;
-  const gptReply = await getGptResponse(userMessage);
 
-  return client.replyMessage(event.replyToken, {
-    type: 'text',
-    text: gptReply,
-  });
+  try {
+    const history = await getConversationHistory(userId, 6);
+    const gptReply = await getGptResponse(userMessage, history);
+
+    await saveConversationTurn(userId, 'user', userMessage);
+    await saveConversationTurn(userId, 'assistant', gptReply);
+
+    return client.replyMessage(event.replyToken, {
+      type: 'text',
+      text: gptReply.slice(0, 5000),
+    });
+  } catch (err) {
+    console.error('handleEvent Error:', err?.response?.data || err.message || err);
+
+    try {
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: 'ごめんだじ〜。今ちょっと調子が悪いだじ〜。',
+      });
+    } catch (replyErr) {
+      console.error('LINE reply fallback Error:', replyErr?.response?.data || replyErr.message || replyErr);
+      return null;
+    }
+  }
 }
 
 // ------------------------------------------
@@ -297,12 +380,45 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.post('/chat', async (req, res) => {
   try {
     const { message } = req.body;
-    const reply = await getGptResponse(message || '');
+    const reply = await getGptResponse(message || '', []);
     res.json({ reply });
   } catch (err) {
     console.error('Chat API Error:', err?.response?.data || err.message || err);
     res.status(500).json({ error: 'エラーだじ〜' });
   }
+});
+
+// ------------------------------------------
+// root / health / logtest
+// ------------------------------------------
+app.get('/', (req, res) => {
+  res.send(`
+    <h1>Hello World from LINE GPT Bot + Inventory App!</h1>
+    <ul>
+      <li><a href="/inventory">/inventory</a> 在庫管理画面</li>
+      <li><a href="/health">/health</a> ヘルスチェック</li>
+      <li><a href="/logtest">/logtest</a> ログテスト</li>
+    </ul>
+  `);
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    ok: true,
+    service: 'linebot-inventory-unified',
+    hasLineToken: !!process.env.LINE_CHANNEL_ACCESS_TOKEN,
+    hasLineSecret: !!process.env.LINE_CHANNEL_SECRET,
+    hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+    hasSupabaseUrl: !!process.env.SUPABASE_URL,
+    hasSupabaseSecret: !!process.env.SUPABASE_SECRET_KEY,
+    inventoryApiConfigured: !!INVENTORY_API_URL && !!INVENTORY_API_TOKEN,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/logtest', (req, res) => {
+  console.log('🧪 ログ出力テスト成功！');
+  res.send('ログ出力したよ！');
 });
 
 // ------------------------------------------
