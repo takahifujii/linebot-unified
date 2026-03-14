@@ -22,6 +22,7 @@ const INVENTORY_API_TOKEN = process.env.INVENTORY_API_TOKEN;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+const ADMIN_LINE_USER_IDS = process.env.ADMIN_LINE_USER_IDS || '';
 
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
@@ -128,6 +129,46 @@ function unwrapGasResponse(gasResponse) {
   return gasResponse.data;
 }
 
+function normalizeQuery(text) {
+  return String(text || '')
+    .replace(/[　\s]+/g, ' ')
+    .trim();
+}
+
+function isAdminUser(userId) {
+  const adminIds = ADMIN_LINE_USER_IDS
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  return adminIds.includes(userId);
+}
+
+function parseAdditionCommand(text) {
+  const normalized = String(text || '').trim();
+
+  if (!normalized.startsWith('補足登録:') && !normalized.startsWith('補足登録：')) {
+    return null;
+  }
+
+  const body = normalized.replace(/^補足登録[:：]/, '').trim();
+  if (!body) return null;
+
+  const lines = body.split('\n').map((v) => v.trim()).filter(Boolean);
+
+  if (lines.length === 1) {
+    return {
+      title: 'LINE補足登録',
+      content: lines[0],
+    };
+  }
+
+  return {
+    title: lines[0] || 'LINE補足登録',
+    content: lines.slice(1).join('\n'),
+  };
+}
+
 // ------------------------------------------
 // 会話履歴ヘルパー
 // ------------------------------------------
@@ -188,19 +229,11 @@ async function createQuestionEmbedding(text) {
   return response.data[0].embedding;
 }
 
-function normalizeQuery(text) {
-  return String(text || '')
-    .replace(/[　\s]+/g, ' ')
-    .trim();
-}
-
 function expandKnowledgeQueries(message) {
   const base = normalizeQuery(message);
   const queries = new Set();
 
-  if (!base) {
-    return [];
-  }
+  if (!base) return [];
 
   queries.add(base);
   queries.add(`${base} 現調`);
@@ -210,8 +243,8 @@ function expandKnowledgeQueries(message) {
 
   if (base.includes('トイレ')) {
     queries.add(`${base} 排水`);
-    queries.add(`${base} 床排水 壁排水`);
     queries.add(`${base} 排水位置`);
+    queries.add(`${base} 床排水 壁排水`);
   }
 
   if (base.includes('排水芯')) {
@@ -236,7 +269,7 @@ async function searchKnowledge(message, matchCount = 8, minSimilarity = 0.65) {
   for (const q of queries) {
     const embedding = await createQuestionEmbedding(q);
 
-    const { data, error } = await supabase.rpc('match_knowledge', {
+    const { data, error } = await supabase.rpc('match_all_knowledge', {
       query_embedding: embedding,
       match_count: matchCount,
     });
@@ -258,7 +291,7 @@ async function searchKnowledge(message, matchCount = 8, minSimilarity = 0.65) {
   const dedupedMap = new Map();
 
   for (const row of allRows) {
-    const key = String(row.id ?? `${row.title}-${row.content?.slice(0, 50) ?? ''}`);
+    const key = `${row.source_type || 'unknown'}-${row.id}`;
     const current = dedupedMap.get(key);
 
     if (!current) {
@@ -303,10 +336,12 @@ function buildKnowledgeContext(results) {
           ? row.similarity.toFixed(4)
           : 'n/a';
       const searchQuery = row.search_query || 'n/a';
+      const sourceType = row.source_type || 'unknown';
 
       return [
         `【根拠資料${index + 1}】`,
         `資料名: ${title}`,
+        `種類: ${sourceType}`,
         `関連度: ${similarity}`,
         `ヒットした検索語: ${searchQuery}`,
         `以下は原文抜粋:`,
@@ -314,6 +349,32 @@ function buildKnowledgeContext(results) {
       ].join('\n');
     })
     .join('\n\n====================\n\n');
+}
+
+async function saveKnowledgeAddition({ title, content, createdBy }) {
+  requireEnv('SUPABASE_URL', SUPABASE_URL);
+  requireEnv('SUPABASE_SECRET_KEY', SUPABASE_SECRET_KEY);
+
+  const embedding = await createQuestionEmbedding(content);
+
+  const { error } = await supabase
+    .from('knowledge_additions')
+    .insert([
+      {
+        title,
+        content,
+        metadata: {
+          source: 'line_addition',
+        },
+        embedding,
+        created_by: createdBy,
+        is_active: true,
+      },
+    ]);
+
+  if (error) {
+    throw error;
+  }
 }
 
 // ------------------------------------------
@@ -549,6 +610,28 @@ async function handleEvent(event) {
   const userMessage = event.message.text;
 
   try {
+    const addition = parseAdditionCommand(userMessage);
+
+    if (addition) {
+      if (!isAdminUser(userId)) {
+        return client.replyMessage(event.replyToken, {
+          type: 'text',
+          text: '補足登録は管理者のみ使えるだじ〜。',
+        });
+      }
+
+      await saveKnowledgeAddition({
+        title: addition.title,
+        content: addition.content,
+        createdBy: userId,
+      });
+
+      return client.replyMessage(event.replyToken, {
+        type: 'text',
+        text: '補足知識を登録しただじ〜！次回から検索対象に入るだじ！',
+      });
+    }
+
     const history = await getConversationHistory(userId, 6);
     const gptReply = await getGptResponse(userMessage, history);
 
@@ -632,6 +715,7 @@ app.get('/health', (req, res) => {
     hasOpenAIKey: !!process.env.OPENAI_API_KEY,
     hasSupabaseUrl: !!process.env.SUPABASE_URL,
     hasSupabaseSecret: !!process.env.SUPABASE_SECRET_KEY,
+    hasAdminLineUserIds: !!ADMIN_LINE_USER_IDS,
     inventoryApiConfigured: !!INVENTORY_API_URL && !!INVENTORY_API_TOKEN,
     timestamp: new Date().toISOString(),
   });
