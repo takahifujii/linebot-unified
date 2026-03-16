@@ -2671,7 +2671,7 @@ renderPhotoPreview();
     renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
     els.setupBackdrop.classList.add('show');
   }
-})();
+})();//
 
 window.consumeItem = consumeItem;
 window.submitConsume = submitConsume;
@@ -2683,8 +2683,8 @@ window.clearPhotoFromModal = clearPhotoFromModal;
   </script>
 </body>
 </html>
-  `);
-});
+  `);//
+});//
 
 // ------------------------------------------
 // ポート
