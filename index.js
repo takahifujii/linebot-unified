@@ -2,6 +2,7 @@ import express from 'express';
 import { Client, middleware } from '@line/bot-sdk';
 import axios from 'axios';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
@@ -23,12 +24,17 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 const ADMIN_LINE_USER_IDS = process.env.ADMIN_LINE_USER_IDS || '';
+const APP_SESSION_SECRET = process.env.APP_SESSION_SECRET;
 
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
+
+// webhookより後でJSONを有効化
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ------------------------------------------
 // PWA設定
@@ -72,6 +78,46 @@ function requireEnv(name, value) {
   if (!value) {
     throw new Error(`${name} が未設定です`);
   }
+}
+
+function normalizeQuery(text) {
+  return String(text || '')
+    .replace(/[　\s]+/g, ' ')
+    .trim();
+}
+
+function isAdminUser(userId) {
+  const adminIds = ADMIN_LINE_USER_IDS
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  return adminIds.includes(userId);
+}
+
+function parseAdditionCommand(text) {
+  const normalized = String(text || '').trim();
+
+  if (!normalized.startsWith('補足登録:') && !normalized.startsWith('補足登録：')) {
+    return null;
+  }
+
+  const body = normalized.replace(/^補足登録[:：]/, '').trim();
+  if (!body) return null;
+
+  const lines = body.split('\n').map((v) => v.trim()).filter(Boolean);
+
+  if (lines.length === 1) {
+    return {
+      title: 'LINE補足登録',
+      content: lines[0],
+    };
+  }
+
+  return {
+    title: lines[0] || 'LINE補足登録',
+    content: lines.slice(1).join('\n'),
+  };
 }
 
 async function callInventoryGet(action, extraParams = {}) {
@@ -129,44 +175,88 @@ function unwrapGasResponse(gasResponse) {
   return gasResponse.data;
 }
 
-function normalizeQuery(text) {
-  return String(text || '')
-    .replace(/[　\s]+/g, ' ')
-    .trim();
+// ------------------------------------------
+// セッション認証ヘルパー
+// ------------------------------------------
+function base64UrlEncode(text) {
+  return Buffer.from(text, 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
 }
 
-function isAdminUser(userId) {
-  const adminIds = ADMIN_LINE_USER_IDS
-    .split(',')
-    .map((v) => v.trim())
-    .filter(Boolean);
-
-  return adminIds.includes(userId);
+function base64UrlDecode(text) {
+  const normalized = text
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+  const padLength = (4 - (normalized.length % 4)) % 4;
+  const padded = normalized + '='.repeat(padLength);
+  return Buffer.from(padded, 'base64').toString('utf8');
 }
 
-function parseAdditionCommand(text) {
-  const normalized = String(text || '').trim();
+function signSessionPayload(payload) {
+  requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
 
-  if (!normalized.startsWith('補足登録:') && !normalized.startsWith('補足登録：')) {
+  const body = base64UrlEncode(JSON.stringify(payload));
+  const sig = crypto
+    .createHmac('sha256', APP_SESSION_SECRET)
+    .update(body)
+    .digest('hex');
+
+  return `${body}.${sig}`;
+}
+
+function verifySessionToken(token) {
+  if (!token || typeof token !== 'string') return null;
+
+  requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
+
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+
+  const [body, sig] = parts;
+
+  const expected = crypto
+    .createHmac('sha256', APP_SESSION_SECRET)
+    .update(body)
+    .digest('hex');
+
+  if (sig !== expected) return null;
+
+  try {
+    const payload = JSON.parse(base64UrlDecode(body));
+    if (!payload || !payload.username || !payload.exp) return null;
+    if (Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
     return null;
   }
+}
 
-  const body = normalized.replace(/^補足登録[:：]/, '').trim();
-  if (!body) return null;
-
-  const lines = body.split('\n').map((v) => v.trim()).filter(Boolean);
-
-  if (lines.length === 1) {
-    return {
-      title: 'LINE補足登録',
-      content: lines[0],
-    };
+function getBearerToken(req) {
+  const auth = req.headers.authorization || '';
+  if (auth.startsWith('Bearer ')) {
+    return auth.slice(7).trim();
   }
+  return '';
+}
 
-  return {
-    title: lines[0] || 'LINE補足登録',
-    content: lines.slice(1).join('\n'),
-  };
+function requireInventoryAuth(req, res, next) {
+  try {
+    const token = getBearerToken(req);
+    const session = verifySessionToken(token);
+
+    if (!session) {
+      return res.status(401).json({ error: 'ログインが必要です' });
+    }
+
+    req.inventoryUser = session;
+    next();
+  } catch (err) {
+    console.error('requireInventoryAuth Error:', err.message || err);
+    return res.status(401).json({ error: '認証に失敗しました' });
+  }
 }
 
 // ------------------------------------------
@@ -674,9 +764,67 @@ app.post('/webhook', middleware(config), async (req, res) => {
   }
 });
 
-// webhookより後でJSONを有効化
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ------------------------------------------
+// 在庫アプリ ログインAPI
+// ------------------------------------------
+app.post('/api/login', async (req, res) => {
+  try {
+    const username = String(req.body?.username || '').trim();
+    const pin = String(req.body?.pin || '').trim();
+
+    if (!username || !pin) {
+      return res.status(400).json({ error: 'username と pin が必要です' });
+    }
+
+    const gasResponse = await callInventoryPost('loginUser', {
+      username,
+      pin,
+    });
+
+    const result = unwrapGasResponse(gasResponse);
+
+    if (!result || result.ok !== true) {
+      return res.status(401).json({
+        error: result?.message || 'ユーザー名またはPINが違います',
+      });
+    }
+
+    const payload = {
+      username: result.username,
+      display_name: result.display_name || result.username,
+      role: result.role || 'staff',
+      exp: Date.now() + 1000 * 60 * 60 * 24 * 30,
+    };
+
+    const token = signSessionPayload(payload);
+
+    return res.json({
+      ok: true,
+      token,
+      user: {
+        username: payload.username,
+        display_name: payload.display_name,
+        role: payload.role,
+      },
+    });
+  } catch (err) {
+    console.error('POST /api/login Error:', err?.response?.data || err.message || err);
+    return res.status(500).json({
+      error: err.message || 'ログインに失敗しました',
+    });
+  }
+});
+
+app.get('/api/session', requireInventoryAuth, async (req, res) => {
+  return res.json({
+    ok: true,
+    user: {
+      username: req.inventoryUser.username,
+      display_name: req.inventoryUser.display_name,
+      role: req.inventoryUser.role,
+    },
+  });
+});
 
 // ------------------------------------------
 // GPTテストAPI
@@ -716,6 +864,7 @@ app.get('/health', (req, res) => {
     hasSupabaseUrl: !!process.env.SUPABASE_URL,
     hasSupabaseSecret: !!process.env.SUPABASE_SECRET_KEY,
     hasAdminLineUserIds: !!ADMIN_LINE_USER_IDS,
+    hasAppSessionSecret: !!process.env.APP_SESSION_SECRET,
     inventoryApiConfigured: !!INVENTORY_API_URL && !!INVENTORY_API_TOKEN,
     timestamp: new Date().toISOString(),
   });
@@ -729,7 +878,7 @@ app.get('/logtest', (req, res) => {
 // ------------------------------------------
 // 在庫API
 // ------------------------------------------
-app.get('/api/items', async (req, res) => {
+app.get('/api/items', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryGet('getItems');
     const items = unwrapGasResponse(gasResponse);
@@ -740,7 +889,7 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
-app.get('/api/items/:id', async (req, res) => {
+app.get('/api/items/:id', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryGet('getItem', { id: req.params.id });
     const item = unwrapGasResponse(gasResponse);
@@ -751,7 +900,7 @@ app.get('/api/items/:id', async (req, res) => {
   }
 });
 
-app.get('/api/logs', async (req, res) => {
+app.get('/api/logs', requireInventoryAuth, async (req, res) => {
   try {
     const itemId = req.query.item_id || '';
     const gasResponse = await callInventoryGet('getLogs', itemId ? { item_id: itemId } : {});
@@ -763,7 +912,7 @@ app.get('/api/logs', async (req, res) => {
   }
 });
 
-app.get('/api/master', async (req, res) => {
+app.get('/api/master', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryGet('getMasters');
     const master = unwrapGasResponse(gasResponse);
@@ -773,9 +922,15 @@ app.get('/api/master', async (req, res) => {
     res.status(500).json({ error: err.message || 'マスタ取得に失敗しました' });
   }
 });
-app.post('/api/items', async (req, res) => {
+
+app.post('/api/items', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('createItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.display_name || req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('createItem', payload);
     const item = unwrapGasResponse(gasResponse);
     res.json(item);
   } catch (err) {
@@ -784,9 +939,14 @@ app.post('/api/items', async (req, res) => {
   }
 });
 
-app.post('/api/items/update', async (req, res) => {
+app.post('/api/items/update', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('updateItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.display_name || req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('updateItem', payload);
     const item = unwrapGasResponse(gasResponse);
     res.json(item);
   } catch (err) {
@@ -795,9 +955,14 @@ app.post('/api/items/update', async (req, res) => {
   }
 });
 
-app.post('/api/items/use', async (req, res) => {
+app.post('/api/items/use', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('consumeItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.display_name || req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('consumeItem', payload);
     const item = unwrapGasResponse(gasResponse);
     res.json(item);
   } catch (err) {
@@ -806,9 +971,14 @@ app.post('/api/items/use', async (req, res) => {
   }
 });
 
-app.post('/api/items/archive', async (req, res) => {
+app.post('/api/items/archive', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('archiveItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.display_name || req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('archiveItem', payload);
     const result = unwrapGasResponse(gasResponse);
     res.json(result);
   } catch (err) {
@@ -817,7 +987,7 @@ app.post('/api/items/archive', async (req, res) => {
   }
 });
 
-app.post('/api/items/init', async (req, res) => {
+app.post('/api/items/init', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryPost('init', {});
     const result = unwrapGasResponse(gasResponse);
@@ -831,8 +1001,10 @@ app.post('/api/items/init', async (req, res) => {
 // ------------------------------------------
 // スマホ向け在庫管理画面
 // ------------------------------------------
+
 app.get('/inventory', (req, res) => {
   res.send(`
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -846,9 +1018,9 @@ app.get('/inventory', (req, res) => {
   <meta name="apple-mobile-web-app-title" content="E!stockS" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <style>
-  body {
-  font-size:10px;
-}
+    body {
+      font-size: 10px;
+    }
     :root{
       --bg:#0b1636;
       --card:#1e2b4b;
@@ -900,6 +1072,11 @@ app.get('/inventory', (req, res) => {
       letter-spacing:0.02em;
     }
     .title-sub{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .login-user{
       margin-top:4px;
       font-size:12px;
       color:var(--muted);
@@ -1348,6 +1525,7 @@ app.get('/inventory', (req, res) => {
         <div>
           <div class="title">在庫管理</div>
           <div class="title-sub">リフォーム工房アントレ 在庫アプリ</div>
+          <div class="login-user" id="loginUserLabel"></div>
         </div>
         <button class="round-btn" id="refreshBtn">↻</button>
       </div>
@@ -1464,8 +1642,8 @@ app.get('/inventory', (req, res) => {
         <div style="height:18px;"></div>
 
         <div class="field">
-          <label>PIN認証をリセット</label>
-          <button class="btn btn-danger" style="width:100%; border-radius:18px; padding:14px 16px;" id="resetPinBtn">次回起動時にPINを再入力</button>
+          <label>ログイン管理</label>
+          <button class="btn btn-danger" style="width:100%; border-radius:18px; padding:14px 16px;" id="logoutBtn">ログアウト</button>
         </div>
       </div>
     </div>
@@ -1495,12 +1673,17 @@ app.get('/inventory', (req, res) => {
 
   <div class="modal-backdrop" id="pinBackdrop">
     <div class="modal">
-      <div class="pin-title">PINコード入力</div>
-      <div class="pin-note">初回のみ、PINコードを入力してください</div>
+      <div class="pin-title">ログイン</div>
+      <div class="pin-note">ユーザー名とPINを入力してください</div>
       <div class="field">
+        <label>ユーザー名</label>
+        <input id="loginUsernameInput" class="input" type="text" placeholder="例：fujii" />
+      </div>
+      <div class="field">
+        <label>PIN</label>
         <input id="pinInput" class="input" type="password" inputmode="numeric" placeholder="PINコード" />
       </div>
-      <button class="submit-btn" id="pinSubmitBtn">開く</button>
+      <button class="submit-btn" id="pinSubmitBtn">ログイン</button>
     </div>
   </div>
 
@@ -1522,16 +1705,16 @@ app.get('/inventory', (req, res) => {
     </div>
   </div>
 
-  <script>
-    let allItems = [];
+  <script>    let allItems = [];
     let filteredItems = [];
     let masterCategories = [];
     let masterLocations = [];
     let activeMainTab = 'all';
     let selectedPhotoBase64 = '';
+    let currentToken = '';
+    let currentUser = null;
 
     let settings = {
-      posterName: '',
       theme: 'violet'
     };
 
@@ -1558,6 +1741,8 @@ app.get('/inventory', (req, res) => {
       navCreate: document.getElementById('navCreate'),
       navAccount: document.getElementById('navAccount'),
 
+      loginUserLabel: document.getElementById('loginUserLabel'),
+
       photoZone: document.getElementById('photoZone'),
       cameraInput: document.getElementById('cameraInput'),
       photoInput: document.getElementById('photoInput'),
@@ -1579,7 +1764,7 @@ app.get('/inventory', (req, res) => {
       settingPosterName: document.getElementById('settingPosterName'),
       themeGrid: document.getElementById('themeGrid'),
       saveSettingsBtn: document.getElementById('saveSettingsBtn'),
-      resetPinBtn: document.getElementById('resetPinBtn'),
+      logoutBtn: document.getElementById('logoutBtn'),
 
       modalBackdrop: document.getElementById('modalBackdrop'),
       modalTitle: document.getElementById('modalTitle'),
@@ -1587,6 +1772,7 @@ app.get('/inventory', (req, res) => {
       closeModalBtn: document.getElementById('closeModalBtn'),
 
       pinBackdrop: document.getElementById('pinBackdrop'),
+      loginUsernameInput: document.getElementById('loginUsernameInput'),
       pinInput: document.getElementById('pinInput'),
       pinSubmitBtn: document.getElementById('pinSubmitBtn'),
 
@@ -1624,14 +1810,87 @@ app.get('/inventory', (req, res) => {
       return out;
     }
 
+    function getStoredAuth() {
+      try {
+        const raw = localStorage.getItem('inventory_auth');
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveAuth(user, token) {
+      currentUser = user || null;
+      currentToken = token || '';
+      localStorage.setItem('inventory_auth', JSON.stringify({
+        user: currentUser,
+        token: currentToken
+      }));
+      updateLoginUserLabel();
+    }
+
+    function clearAuth() {
+      currentUser = null;
+      currentToken = '';
+      localStorage.removeItem('inventory_auth');
+      localStorage.removeItem('inventory_setup_done');
+      updateLoginUserLabel();
+    }
+
+    function loadAuth() {
+      const auth = getStoredAuth();
+      if (!auth) {
+        currentUser = null;
+        currentToken = '';
+        updateLoginUserLabel();
+        return;
+      }
+
+      currentUser = auth.user || null;
+      currentToken = auth.token || '';
+      updateLoginUserLabel();
+    }
+
+    function isLoggedIn() {
+      return !!(currentUser && currentToken);
+    }
+
+    function updateLoginUserLabel() {
+      if (currentUser && currentUser.display_name) {
+        els.loginUserLabel.textContent = 'ログイン中: ' + currentUser.display_name;
+      } else {
+        els.loginUserLabel.textContent = '';
+      }
+    }
+
+    function authHeaders(extra = {}) {
+      return {
+        ...extra,
+        Authorization: 'Bearer ' + currentToken
+      };
+    }
+
     function applyTheme(themeKey) {
-      if (!THEMES[themeKey]) themeKey = 'violet';
+      if (!THEMES[themeKey]) {
+        themeKey = 'violet';
+      }
+
       settings.theme = themeKey;
       const t = THEMES[themeKey];
+
       document.documentElement.style.setProperty('--accent', t.accent);
       document.documentElement.style.setProperty('--accent2', t.accent2);
       document.documentElement.style.setProperty('--bg', t.bg);
       document.documentElement.style.setProperty('--card', t.card);
+    }
+
+    function saveSettings() {
+      localStorage.setItem(
+        'inventory_settings',
+        JSON.stringify({
+          theme: settings.theme || 'violet'
+        })
+      );
     }
 
     function loadSettings() {
@@ -1639,107 +1898,173 @@ app.get('/inventory', (req, res) => {
         const raw = localStorage.getItem('inventory_settings');
         if (raw) {
           const obj = JSON.parse(raw);
-          settings.posterName = safeText(obj.posterName || '');
           settings.theme = safeText(obj.theme || 'violet');
         }
-      } catch (e) {}
-      applyTheme(settings.theme);
-      els.settingPosterName.value = settings.posterName;
-      els.setupPosterName.value = settings.posterName;
-    }
+      } catch (e) {
+        settings.theme = 'violet';
+      }
 
-    function saveSettings() {
-      localStorage.setItem('inventory_settings', JSON.stringify(settings));
       applyTheme(settings.theme);
     }
 
     function renderThemeButtons(targetEl, selectedKey, mode) {
       let html = '';
+
       Object.keys(THEMES).forEach((key) => {
         const t = THEMES[key];
-        html += '<button type="button" class="theme-btn ' + (selectedKey === key ? 'active' : '') + '" ' +
-          'data-key="' + escapeHtml(key) + '" ' +
-          'style="background:linear-gradient(135deg,' + t.accent + ' 0%,' + t.accent2 + ' 100%);"></button>';
+        html += '<button type="button" class="theme-btn ' + (selectedKey === key ? 'active' : '') + '" data-key="' + escapeHtml(key) + '" style="background:linear-gradient(135deg, ' + t.accent + ' 0%, ' + t.accent2 + ' 100%);"></button>';
       });
+
       targetEl.innerHTML = html;
 
       targetEl.querySelectorAll('.theme-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const key = btn.getAttribute('data-key');
           settings.theme = key;
+
           if (mode === 'setup') {
             renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
           } else {
             renderThemeButtons(els.themeGrid, settings.theme, 'account');
           }
+
+          applyTheme(settings.theme);
         });
       });
     }
 
-    function checkPinFlow() {
-      const pinOk = localStorage.getItem('inventory_pin_ok') === '1';
-      const setupDone = localStorage.getItem('inventory_setup_done') === '1';
-
-      if (!pinOk) {
+    function requireLogin() {
+      if (!isLoggedIn()) {
         els.pinBackdrop.classList.add('show');
+        return false;
+      }
+      return true;
+    }
+
+    async function apiFetch(url, options = {}) {
+      const headers = authHeaders(options.headers || {});
+      const finalOptions = {
+        ...options,
+        headers
+      };
+
+      const res = await fetch(url, finalOptions);
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || '通信エラーが発生しました');
+      }
+
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
+
+      return data;
+    }
+
+    async function submitLogin() {
+      const username = els.loginUsernameInput.value.trim();
+      const pin = els.pinInput.value.trim();
+
+      if (!username) {
+        alert('ユーザー名を入力してください');
         return;
       }
 
-      if (!setupDone) {
-        renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
-        els.setupBackdrop.classList.add('show');
+      if (!pin) {
+        alert('PINを入力してください');
+        return;
+      }
+
+      try {
+        const result = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username, pin })
+        });
+
+        const data = await result.json();
+
+        if (!result.ok || data.error) {
+          throw new Error(data.error || 'ログインに失敗しました');
+        }
+
+        saveAuth(data.user, data.token);
+        els.pinBackdrop.classList.remove('show');
+        els.pinInput.value = '';
+
+        if (localStorage.getItem('inventory_setup_done') !== '1') {
+          els.setupPosterName.value = safeText(currentUser?.display_name || '');
+          renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
+          els.setupBackdrop.classList.add('show');
+        } else {
+          els.settingPosterName.value = safeText(currentUser?.display_name || '');
+        }
+
+        await reloadAll();
+      } catch (err) {
+        alert(err.message || 'ログインに失敗しました');
       }
     }
 
-    function submitPin() {
-      const pin = els.pinInput.value.trim();
-      if (pin === '1616') {
-        localStorage.setItem('inventory_pin_ok', '1');
-        els.pinBackdrop.classList.remove('show');
-
-        if (localStorage.getItem('inventory_setup_done') !== '1') {
-          renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
-          els.setupBackdrop.classList.add('show');
-        }
-      } else {
-        alert('PINコードが違います');
-      }
+    function logout() {
+      clearAuth();
+      allItems = [];
+      filteredItems = [];
+      els.itemsContainer.innerHTML = '<div class="empty">ログアウトしました。</div>';
+      els.pinBackdrop.classList.add('show');
     }
 
     function submitInitialSetup() {
-      settings.posterName = els.setupPosterName.value.trim();
-      if (!settings.posterName) {
+      const displayName = els.setupPosterName.value.trim();
+
+      if (!displayName) {
         alert('投稿者名を入力してください');
         return;
       }
+
+      if (!currentUser) {
+        alert('ログイン情報がありません');
+        return;
+      }
+
+      currentUser.display_name = displayName;
+      saveAuth(currentUser, currentToken);
       saveSettings();
+
       localStorage.setItem('inventory_setup_done', '1');
-      els.settingPosterName.value = settings.posterName;
+
+      els.settingPosterName.value = displayName;
       renderThemeButtons(els.themeGrid, settings.theme, 'account');
       els.setupBackdrop.classList.remove('show');
     }
 
     function saveAccountSettings() {
-      settings.posterName = els.settingPosterName.value.trim();
-      if (!settings.posterName) {
+      if (!currentUser) {
+        alert('ログイン情報がありません');
+        return;
+      }
+
+      const displayName = els.settingPosterName.value.trim();
+      if (!displayName) {
         alert('投稿者名を入力してください');
         return;
       }
-      saveSettings();
-      els.setupPosterName.value = settings.posterName;
-      alert('設定を保存しました');
-    }
 
-    function resetPin() {
-      localStorage.removeItem('inventory_pin_ok');
-      alert('PINをリセットしました。次回起動時に再入力されます');
+      currentUser.display_name = displayName;
+      saveAuth(currentUser, currentToken);
+      saveSettings();
+
+      alert('設定を保存しました');
     }
 
     function extractDriveFileId(url) {
       const raw = safeText(url).trim();
       if (!raw) return '';
 
-      const fileMatch = raw.match(/\\/file\\/d\\/([^/]+)/);
+      const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
       if (fileMatch && fileMatch[1]) return fileMatch[1];
 
       const idMatch = raw.match(/[?&]id=([^&]+)/);
@@ -1751,8 +2076,10 @@ app.get('/inventory', (req, res) => {
     function buildDriveImageCandidates(url) {
       const raw = safeText(url).trim();
       if (!raw) return [];
+
       const id = extractDriveFileId(raw);
       if (!id) return [raw];
+
       return [
         'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000',
         'https://drive.google.com/uc?export=view&id=' + id,
@@ -1762,9 +2089,10 @@ app.get('/inventory', (req, res) => {
 
     function getPhotoUrls(item) {
       if (!item.photo_urls) return [];
+
       return safeText(item.photo_urls)
         .split(',')
-        .map(v => safeText(v).trim())
+        .map((v) => safeText(v).trim())
         .filter(Boolean);
     }
 
@@ -1777,25 +2105,25 @@ app.get('/inventory', (req, res) => {
     }
 
     function getLargeNames() {
-      return uniqueSorted(masterCategories.map(row => row.large_name));
+      return uniqueSorted(masterCategories.map((row) => row.large_name));
     }
 
     function getMiddleNames(largeName) {
       return uniqueSorted(
         masterCategories
-          .filter(row => safeText(row.large_name).trim() === safeText(largeName).trim())
-          .map(row => row.middle_name)
+          .filter((row) => safeText(row.large_name).trim() === safeText(largeName).trim())
+          .map((row) => row.middle_name)
       );
     }
 
     function getSmallNames(largeName, middleName) {
       return uniqueSorted(
         masterCategories
-          .filter(row =>
+          .filter((row) =>
             safeText(row.large_name).trim() === safeText(largeName).trim() &&
             safeText(row.middle_name).trim() === safeText(middleName).trim()
           )
-          .map(row => row.small_name)
+          .map((row) => row.small_name)
       );
     }
 
@@ -1819,21 +2147,17 @@ app.get('/inventory', (req, res) => {
       if (smallList.includes(prevS)) els.categoryS.value = prevS;
     }
 
-   function refreshLocationSelect() {
-  const locations = uniqueSorted(masterLocations);
-  let html = '<option value="">保管場所を選択</option>';
+    function refreshLocationSelect() {
+      const locations = uniqueSorted(masterLocations);
+      let html = '<option value="">保管場所を選択</option>';
 
-  locations.forEach((loc) => {
-    html += '<option value="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</option>';
-  });
+      locations.forEach((loc) => {
+        html += '<option value="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</option>';
+      });
 
-  html += '<option value="__other__">その他</option>';
-  els.locationSelect.innerHTML = html;
-
-  if (locations.includes('白鳥')) {
-    els.locationSelect.value = '白鳥';
-  }
-}
+      html += '<option value="__other__">その他</option>';
+      els.locationSelect.innerHTML = html;
+    }
 
     function updateLocationOtherVisibility() {
       if (els.locationSelect.value === '__other__') {
@@ -1844,16 +2168,18 @@ app.get('/inventory', (req, res) => {
       }
     }
 
-    async function addLocation() {
+    function addLocation() {
       const name = prompt('追加する保管場所名を入力してください');
       if (!name) return;
+
       const trimmed = name.trim();
       if (!trimmed) return;
 
       if (!masterLocations.includes(trimmed)) {
         masterLocations.push(trimmed);
-        refreshLocationSelect();
       }
+
+      refreshLocationSelect();
       els.locationSelect.value = trimmed;
       updateLocationOtherVisibility();
     }
@@ -1960,21 +2286,14 @@ app.get('/inventory', (req, res) => {
           const c1 = escapeHtml(cands[1] || '');
           const c2 = escapeHtml(cands[2] || '');
 
-          thumbHtml = '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
-            ' onerror="if(!this.dataset.f1 && \\''
-            + c1 +
-            '\\'){this.dataset.f1=\\'1\\';this.src=\\'' +
-            c1 +
-            '\\';return;} if(!this.dataset.f2 && \\''
-            + c2 +
-            '\\'){this.dataset.f2=\\'1\\';this.src=\\'' +
-            c2 +
-            '\\';return;} this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
+          thumbHtml =
+            '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
+            ' onerror="if(!this.dataset.f1 && \'' + c1 + '\'){this.dataset.f1=\'1\';this.src=\'' + c1 + '\';return;} if(!this.dataset.f2 && \'' + c2 + '\'){this.dataset.f2=\'1\';this.src=\'' + c2 + '\';return;} this.onerror=null; this.outerHTML=\'<span>画像なし</span>\';"' +
             ' />';
         }
 
         const chipValues = [item.category_l, item.category_m, item.category_s, item.location]
-          .map(v => safeText(v).trim())
+          .map((v) => safeText(v).trim())
           .filter(Boolean);
 
         let chipsHtml = '';
@@ -1983,19 +2302,19 @@ app.get('/inventory', (req, res) => {
         });
 
         html += '<div class="item-card">';
-        html +=   '<div class="thumb-box">' + thumbHtml + '</div>';
-        html +=   '<div class="item-main">';
-        html +=     '<div class="item-name">' + escapeHtml(item.name || '') + '</div>';
-        html +=     '<div class="item-meta">状態: ' + escapeHtml(item.status || '') + '</div>';
-        html +=     '<div class="chips">' + chipsHtml + '</div>';
-        html +=     '<div class="qty-row">';
-        html +=       '<div class="qty-box"><span class="qty-num">' + escapeHtml(item.qty || 0) + '</span><span class="qty-unit">' + escapeHtml(item.unit || '') + '</span></div>';
-        html +=       '<div class="item-actions">';
-        html +=         '<button class="btn btn-secondary" onclick="editItem(\\'' + escapeHtml(item.item_id) + '\\')">編集</button>';
-        html +=         '<button class="btn btn-primary" onclick="consumeItem(\\'' + escapeHtml(item.item_id) + '\\',\\'' + escapeHtml(item.name || '') + '\\')">消費</button>';
-        html +=       '</div>';
-        html +=     '</div>';
-        html +=   '</div>';
+        html += '<div class="thumb-box">' + thumbHtml + '</div>';
+        html += '<div class="item-main">';
+        html += '<div class="item-name">' + escapeHtml(item.name || '') + '</div>';
+        html += '<div class="item-meta">状態: ' + escapeHtml(item.status || '') + '</div>';
+        html += '<div class="chips">' + chipsHtml + '</div>';
+        html += '<div class="qty-row">';
+        html += '<div class="qty-box"><span class="qty-num">' + escapeHtml(item.qty || 0) + '</span><span class="qty-unit">' + escapeHtml(item.unit || '') + '</span></div>';
+        html += '<div class="item-actions">';
+        html += '<button class="btn btn-secondary" onclick="editItem(\'' + escapeHtml(item.item_id) + '\')">編集</button>';
+        html += '<button class="btn btn-primary" onclick="consumeItem(\'' + escapeHtml(item.item_id) + '\', \'' + escapeHtml(item.name || '') + '\')">消費</button>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
         html += '</div>';
       });
 
@@ -2057,13 +2376,7 @@ app.get('/inventory', (req, res) => {
     }
 
     async function loadMasters() {
-      const res = await fetch('/api/master');
-      const data = await res.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
+      const data = await apiFetch('/api/master');
       masterCategories = Array.isArray(data.categories) ? data.categories : [];
       masterLocations = Array.isArray(data.locations) ? data.locations : [];
 
@@ -2073,11 +2386,9 @@ app.get('/inventory', (req, res) => {
     }
 
     async function loadItems() {
-      const res = await fetch('/api/items');
-      const data = await res.json();
-
+      const data = await apiFetch('/api/items');
       if (!Array.isArray(data)) {
-        throw new Error(data && data.error ? data.error : '在庫データの取得に失敗しました');
+        throw new Error('在庫データの取得に失敗しました');
       }
 
       allItems = data;
@@ -2085,12 +2396,15 @@ app.get('/inventory', (req, res) => {
     }
 
     async function reloadAll() {
+      if (!isLoggedIn()) return;
       await loadMasters();
       await loadItems();
     }
 
     async function createItem() {
       try {
+        if (!requireLogin()) return;
+
         let locationValue = els.locationSelect.value;
         if (locationValue === '__other__') {
           locationValue = els.locationOther.value.trim();
@@ -2105,32 +2419,29 @@ app.get('/inventory', (req, res) => {
           qty: Number(els.qty.value || 0),
           unit: els.unit.value.trim() || '個',
           threshold: els.threshold.value === '' ? '' : Number(els.threshold.value || 0),
-          user: settings.posterName || 'Unknown',
           note: els.note.value.trim() || '在庫登録',
           addIfSameName: els.addIfSameName.checked,
           photo_base64: selectedPhotoBase64 || ''
         };
 
-if (!payload.name) {
-  alert('品名を入力してください');
-  return;
-}
-if (!payload.category_l) {
-  alert('大分類を選択してください');
-  return;
-}
-if (!payload.location) {
-  alert('保管場所を選択してください');
-  return;
-}
-        const res = await fetch('/api/items', {
+        if (!payload.name) {
+          alert('品名を入力してください');
+          return;
+        }
+        if (!payload.category_l) {
+          alert('大分類を選択してください');
+          return;
+        }
+        if (!payload.location) {
+          alert('保管場所を選択してください');
+          return;
+        }
+
+        await apiFetch('/api/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
 
         alert('登録しました');
 
@@ -2160,16 +2471,17 @@ if (!payload.location) {
       html += '<div class="field"><label>対象</label><input class="input" value="' + escapeHtml(itemName) + '" disabled /></div>';
       html += '<div class="field"><label>消費数</label><input class="input" id="consume_qty" type="number" value="1" /></div>';
       html += '<div class="field"><label>メモ</label><input class="input" id="consume_note" value="使用・消費" /></div>';
-      html += '<button class="submit-btn" onclick="submitConsume(\\'' + escapeHtml(itemId) + '\\')">消費する</button>';
+      html += '<button class="submit-btn" onclick="submitConsume(\'' + escapeHtml(itemId) + '\')">消費する</button>';
       openModal('在庫を消費', html);
     }
 
     async function submitConsume(itemId) {
       try {
+        if (!requireLogin()) return;
+
         const payload = {
           item_id: itemId,
           consume_qty: Number(document.getElementById('consume_qty').value || 0),
-          user: settings.posterName || 'Unknown',
           note: document.getElementById('consume_note').value.trim() || '使用・消費'
         };
 
@@ -2178,14 +2490,11 @@ if (!payload.location) {
           return;
         }
 
-        const res = await fetch('/api/items/use', {
+        await apiFetch('/api/items/use', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
 
         closeModal();
         await loadItems();
@@ -2196,9 +2505,9 @@ if (!payload.location) {
 
     async function editItem(itemId) {
       try {
-        const res = await fetch('/api/items/' + encodeURIComponent(itemId));
-        const item = await res.json();
-        if (item.error) throw new Error(item.error);
+        if (!requireLogin()) return;
+
+        const item = await apiFetch('/api/items/' + encodeURIComponent(itemId));
 
         let html = '';
         html += '<div class="field"><label>品名</label><input class="input" id="edit_name" value="' + escapeHtml(item.name || '') + '" /></div>';
@@ -2209,7 +2518,7 @@ if (!payload.location) {
         html += '<div class="field"><label>単位</label><input class="input" id="edit_unit" value="' + escapeHtml(item.unit || '個') + '" /></div>';
         html += '<div class="field"><label>要発注ライン</label><input class="input" id="edit_threshold" type="number" value="' + escapeHtml(item.threshold == null ? '' : item.threshold) + '" /></div>';
         html += '<div class="field"><label>メモ</label><input class="input" id="edit_note" value="在庫情報更新" /></div>';
-        html += '<button class="submit-btn" onclick="submitEdit(\\'' + escapeHtml(item.item_id) + '\\')">更新する</button>';
+        html += '<button class="submit-btn" onclick="submitEdit(\'' + escapeHtml(item.item_id) + '\')">更新する</button>';
 
         openModal('在庫を編集', html);
       } catch (err) {
@@ -2219,6 +2528,8 @@ if (!payload.location) {
 
     async function submitEdit(itemId) {
       try {
+        if (!requireLogin()) return;
+
         const payload = {
           item_id: itemId,
           name: document.getElementById('edit_name').value.trim(),
@@ -2228,18 +2539,14 @@ if (!payload.location) {
           location: document.getElementById('edit_location').value.trim(),
           unit: document.getElementById('edit_unit').value.trim() || '個',
           threshold: document.getElementById('edit_threshold').value === '' ? '' : Number(document.getElementById('edit_threshold').value || 0),
-          user: settings.posterName || 'Unknown',
           note: document.getElementById('edit_note').value.trim() || '在庫情報更新'
         };
 
-        const res = await fetch('/api/items/update', {
+        await apiFetch('/api/items/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
 
         closeModal();
         await loadItems();
@@ -2249,6 +2556,7 @@ if (!payload.location) {
     }
 
     els.searchInput.addEventListener('input', filterItems);
+
     els.refreshBtn.addEventListener('click', () => {
       reloadAll().catch((err) => alert(err.message || '更新に失敗しました'));
     });
@@ -2272,6 +2580,7 @@ if (!payload.location) {
     els.cameraInput.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+
       try {
         selectedPhotoBase64 = await fileToBase64(file);
         renderPhotoPreview();
@@ -2283,6 +2592,7 @@ if (!payload.location) {
     els.photoInput.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
+
       try {
         selectedPhotoBase64 = await fileToBase64(file);
         renderPhotoPreview();
@@ -2299,75 +2609,56 @@ if (!payload.location) {
 
     els.closeModalBtn.addEventListener('click', closeModal);
     els.modalBackdrop.addEventListener('click', (e) => {
-      if (e.target === els.modalBackdrop) closeModal();
+      if (e.target === els.modalBackdrop) {
+        closeModal();
+      }
     });
 
-    els.pinSubmitBtn.addEventListener('click', submitPin);
+    els.pinSubmitBtn.addEventListener('click', submitLogin);
     els.pinInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') submitPin();
+      if (e.key === 'Enter') submitLogin();
+    });
+    els.loginUsernameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitLogin();
     });
 
     els.setupSaveBtn.addEventListener('click', submitInitialSetup);
     els.saveSettingsBtn.addEventListener('click', saveAccountSettings);
-    els.resetPinBtn.addEventListener('click', resetPin);
+    els.logoutBtn.addEventListener('click', logout);
 
     loadSettings();
+    loadAuth();
+    updateLoginUserLabel();
+
     renderThemeButtons(els.themeGrid, settings.theme, 'account');
     renderPhotoPreview();
-    checkPinFlow();
 
-    reloadAll().catch((err) => {
-      els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
-    });
+    if (!isLoggedIn()) {
+      els.pinBackdrop.classList.add('show');
+    } else {
+      els.settingPosterName.value = safeText(currentUser?.display_name || '');
+      reloadAll().catch((err) => {
+        els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
+      });
+    }
+
+    if (isLoggedIn() && localStorage.getItem('inventory_setup_done') !== '1') {
+      els.setupPosterName.value = safeText(currentUser?.display_name || '');
+      renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
+      els.setupBackdrop.classList.add('show');
+    }
 
     window.consumeItem = consumeItem;
     window.submitConsume = submitConsume;
     window.editItem = editItem;
     window.submitEdit = submitEdit;
-    window.openCameraFromModal = function() {
-      closeModal();
-      els.cameraInput.click();
-    };
-    window.openLibraryFromModal = function() {
-      closeModal();
-      els.photoInput.click();
-    };
-    window.clearPhotoFromModal = function() {
-      closeModal();
-      clearSelectedPhoto();
-    };
+    window.openCameraFromModal = openCameraFromModal;
+    window.openLibraryFromModal = openLibraryFromModal;
+    window.clearPhotoFromModal = clearPhotoFromModal;
   </script>
 </body>
 </html>
   `);
-});
-
-// ------------------------------------------
-// root / health / logtest
-// ------------------------------------------
-app.get('/', (req, res) => {
-  res.send(`
-    <h1>Hello World from LINE GPT Bot + Inventory App!</h1>
-    <ul>
-      <li><a href="/inventory">/inventory</a> 在庫管理画面</li>
-      <li><a href="/health">/health</a> ヘルスチェック</li>
-      <li><a href="/logtest">/logtest</a> ログテスト</li>
-    </ul>
-  `);
-});
-
-app.get('/health', (req, res) => {
-  res.json({
-    ok: true,
-    service: 'linebot-inventory-unified',
-    inventoryApiConfigured: !!INVENTORY_API_URL && !!INVENTORY_API_TOKEN,
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/logtest', (req, res) => {
-  console.log('🧪 ログ出力テスト成功！');
-  res.send('ログ出力したよ！');
 });
 
 // ------------------------------------------
