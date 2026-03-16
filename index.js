@@ -2483,24 +2483,7 @@ async function validateSessionOnLoad() {
         alert(err.message || '登録に失敗しました');
       }
     }
-async function validateSessionOnLoad() {
-  if (!currentToken) {
-    clearAuth();
-    els.pinBackdrop.classList.add('show');
-    return false;
-  }
 
-  try {
-    const data = await apiFetch('/api/session');
-    currentUser = data.user || null;
-    saveAuth(currentUser, currentToken);
-    return true;
-  } catch (err) {
-    clearAuth();
-    els.pinBackdrop.classList.add('show');
-    return false;
-  }
-}
     async function consumeItem(itemId, itemName) {
       let html = '';
       html += '<div class="field"><label>対象</label><input class="input" value="' + escapeHtml(itemName) + '" disabled /></div>';
