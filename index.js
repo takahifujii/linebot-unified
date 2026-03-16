@@ -2083,17 +2083,17 @@ function updateLoginUserLabel() {
     }
 
     function extractDriveFileId(url) {
-      const raw = safeText(url).trim();
-      if (!raw) return '';
+  const raw = safeText(url).trim();
+  if (!raw) return '';
 
-      const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
-      if (fileMatch && fileMatch[1]) return fileMatch[1];
+  const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
+  if (fileMatch && fileMatch[1]) return fileMatch[1];
 
-      const idMatch = raw.match(/[?&]id=([^&]+)/);
-      if (idMatch && idMatch[1]) return idMatch[1];
+  const idMatch = raw.match(/[?&]id=([^&]+)/);
+  if (idMatch && idMatch[1]) return idMatch[1];
 
-      return '';
-    }
+  return '';
+}
 
     function buildDriveImageCandidates(url) {
       const raw = safeText(url).trim();
