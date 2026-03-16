@@ -32,10 +32,6 @@ const openai = new OpenAI({
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
-// webhookより後でJSONを有効化
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
 // ------------------------------------------
 // PWA設定
 // ------------------------------------------
@@ -747,6 +743,11 @@ async function handleEvent(event) {
   }
 }
 
+const client = new Client(config);
+const app = express();
+
+// ここではまだ app.use(express.json()) を書かない
+
 // ------------------------------------------
 // Webhook
 // ------------------------------------------
@@ -763,6 +764,11 @@ app.post('/webhook', middleware(config), async (req, res) => {
     res.status(500).end();
   }
 });
+
+// webhook の後で JSON を有効化
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 
 // ------------------------------------------
 // 在庫アプリ ログインAPI
