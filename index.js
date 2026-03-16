@@ -1837,19 +1837,24 @@ app.get('/inventory', (req, res) => {
       updateLoginUserLabel();
     }
 
-    function loadAuth() {
-      const auth = getStoredAuth();
-      if (!auth) {
-        currentUser = null;
-        currentToken = '';
-        updateLoginUserLabel();
-        return;
-      }
+ function loadAuth() {
+  const auth = getStoredAuth();
+  if (!auth) {
+    currentUser = null;
+    currentToken = '';
+    updateLoginUserLabel();
+    return;
+  }
 
-      currentUser = auth.user || null;
-      currentToken = auth.token || '';
-      updateLoginUserLabel();
-    }
+  currentUser = auth.user || null;
+  currentToken = auth.token || '';
+  updateLoginUserLabel();
+}
+
+function isLoggedIn() {
+  return !!(currentUser && currentToken);
+}
+
 async function validateSessionOnLoad() {
   if (!currentToken) {
     clearAuth();
@@ -1868,7 +1873,6 @@ async function validateSessionOnLoad() {
     return false;
   }
 }
-
     function updateLoginUserLabel() {
       if (currentUser && currentUser.display_name) {
         els.loginUserLabel.textContent = 'ログイン中: ' + currentUser.display_name;
