@@ -1829,15 +1829,15 @@ app.get('/inventory', (req, res) => {
       updateLoginUserLabel();
     }
 
-    function clearAuth() {
-      currentUser = null;
-      currentToken = '';
-      localStorage.removeItem('inventory_auth');
-      localStorage.removeItem('inventory_setup_done');
-      updateLoginUserLabel();
-    }
+function clearAuth() {
+  currentUser = null;
+  currentToken = '';
+  localStorage.removeItem('inventory_auth');
+  localStorage.removeItem('inventory_setup_done');
+  updateLoginUserLabel();
+}
 
- function loadAuth() {
+function loadAuth() {
   const auth = getStoredAuth();
   if (!auth) {
     currentUser = null;
@@ -1873,14 +1873,14 @@ async function validateSessionOnLoad() {
     return false;
   }
 }
-    function updateLoginUserLabel() {
-      if (currentUser && currentUser.display_name) {
-        els.loginUserLabel.textContent = 'ログイン中: ' + currentUser.display_name;
-      } else {
-        els.loginUserLabel.textContent = '';
-      }
-    }
 
+function updateLoginUserLabel() {
+  if (currentUser && currentUser.display_name) {
+    els.loginUserLabel.textContent = 'ログイン中: ' + currentUser.display_name;
+  } else {
+    els.loginUserLabel.textContent = '';
+  }
+}
     function authHeaders(extra = {}) {
       return {
         ...extra,
@@ -2673,6 +2673,7 @@ renderPhotoPreview();
     els.setupBackdrop.classList.add('show');
   }
 })();
+
 window.consumeItem = consumeItem;
 window.submitConsume = submitConsume;
 window.editItem = editItem;
