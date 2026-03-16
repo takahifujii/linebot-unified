@@ -743,8 +743,6 @@ async function handleEvent(event) {
   }
 }
 
-const client = new Client(config);
-const app = express();
 
 // ここではまだ app.use(express.json()) を書かない
 
