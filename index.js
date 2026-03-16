@@ -2626,27 +2626,27 @@ app.get('/inventory', (req, res) => {
     els.saveSettingsBtn.addEventListener('click', saveAccountSettings);
     els.logoutBtn.addEventListener('click', logout);
 
-    loadSettings();
-    loadAuth();
-    updateLoginUserLabel();
+   loadSettings();
+loadAuth();
+updateLoginUserLabel();
 
-    renderThemeButtons(els.themeGrid, settings.theme, 'account');
-    renderPhotoPreview();
+renderThemeButtons(els.themeGrid, settings.theme, 'account');
+renderPhotoPreview();
 
-    if (!isLoggedIn()) {
-      els.pinBackdrop.classList.add('show');
-    } else {
-      els.settingPosterName.value = safeText(currentUser?.display_name || '');
-      reloadAll().catch((err) => {
-        els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
-      });
-    }
+if (!isLoggedIn()) {
+  els.pinBackdrop.classList.add('show');
+} else {
+  els.settingPosterName.value = safeText(currentUser?.display_name || '');
+  reloadAll().catch((err) => {
+    els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
+  });
+}
 
-    if (isLoggedIn() && localStorage.getItem('inventory_setup_done') !== '1') {
-      els.setupPosterName.value = safeText(currentUser?.display_name || '');
-      renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
-      els.setupBackdrop.classList.add('show');
-    }
+if (isLoggedIn() && localStorage.getItem('inventory_setup_done') !== '1') {
+  els.setupPosterName.value = safeText(currentUser?.display_name || '');
+  renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
+  els.setupBackdrop.classList.add('show');
+}
 
     window.consumeItem = consumeItem;
     window.submitConsume = submitConsume;
