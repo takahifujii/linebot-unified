@@ -1850,10 +1850,24 @@ app.get('/inventory', (req, res) => {
       currentToken = auth.token || '';
       updateLoginUserLabel();
     }
+async function validateSessionOnLoad() {
+  if (!currentToken) {
+    clearAuth();
+    els.pinBackdrop.classList.add('show');
+    return false;
+  }
 
-    function isLoggedIn() {
-      return !!(currentUser && currentToken);
-    }
+  try {
+    const data = await apiFetch('/api/session');
+    currentUser = data.user || null;
+    saveAuth(currentUser, currentToken);
+    return true;
+  } catch (err) {
+    clearAuth();
+    els.pinBackdrop.classList.add('show');
+    return false;
+  }
+}
 
     function updateLoginUserLabel() {
       if (currentUser && currentUser.display_name) {
@@ -2465,7 +2479,24 @@ app.get('/inventory', (req, res) => {
         alert(err.message || '登録に失敗しました');
       }
     }
+async function validateSessionOnLoad() {
+  if (!currentToken) {
+    clearAuth();
+    els.pinBackdrop.classList.add('show');
+    return false;
+  }
 
+  try {
+    const data = await apiFetch('/api/session');
+    currentUser = data.user || null;
+    saveAuth(currentUser, currentToken);
+    return true;
+  } catch (err) {
+    clearAuth();
+    els.pinBackdrop.classList.add('show');
+    return false;
+  }
+}
     async function consumeItem(itemId, itemName) {
       let html = '';
       html += '<div class="field"><label>対象</label><input class="input" value="' + escapeHtml(itemName) + '" disabled /></div>';
@@ -2626,35 +2657,43 @@ app.get('/inventory', (req, res) => {
     els.saveSettingsBtn.addEventListener('click', saveAccountSettings);
     els.logoutBtn.addEventListener('click', logout);
 
-   loadSettings();
+loadSettings();
 loadAuth();
 updateLoginUserLabel();
 
 renderThemeButtons(els.themeGrid, settings.theme, 'account');
 renderPhotoPreview();
 
-if (!isLoggedIn()) {
-  els.pinBackdrop.classList.add('show');
-} else {
+(async () => {
+  const ok = await validateSessionOnLoad();
+
+  if (!ok) {
+    return;
+  }
+
   els.settingPosterName.value = safeText(currentUser?.display_name || '');
-  reloadAll().catch((err) => {
-    els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
+
+  await reloadAll().catch((err) => {
+    els.itemsContainer.innerHTML =
+      '<div class="empty">読み込みに失敗しました<br>' +
+      escapeHtml(err.message || '') +
+      '</div>';
   });
-}
 
-if (isLoggedIn() && localStorage.getItem('inventory_setup_done') !== '1') {
-  els.setupPosterName.value = safeText(currentUser?.display_name || '');
-  renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
-  els.setupBackdrop.classList.add('show');
-}
+  if (localStorage.getItem('inventory_setup_done') !== '1') {
+    els.setupPosterName.value = safeText(currentUser?.display_name || '');
+    renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
+    els.setupBackdrop.classList.add('show');
+  }
+})();
 
-    window.consumeItem = consumeItem;
-    window.submitConsume = submitConsume;
-    window.editItem = editItem;
-    window.submitEdit = submitEdit;
-    window.openCameraFromModal = openCameraFromModal;
-    window.openLibraryFromModal = openLibraryFromModal;
-    window.clearPhotoFromModal = clearPhotoFromModal;
+window.consumeItem = consumeItem;
+window.submitConsume = submitConsume;
+window.editItem = editItem;
+window.submitEdit = submitEdit;
+window.openCameraFromModal = openCameraFromModal;
+window.openLibraryFromModal = openLibraryFromModal;
+window.clearPhotoFromModal = clearPhotoFromModal;
   </script>
 </body>
 </html>
