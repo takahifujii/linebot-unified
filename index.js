@@ -2651,9 +2651,28 @@ updateLoginUserLabel();
 renderThemeButtons(els.themeGrid, settings.theme, 'account');
 renderPhotoPreview();
 
-// 強制テスト
-els.pinBackdrop.classList.add('show');
+(async () => {
+  const ok = await validateSessionOnLoad();
 
+  if (!ok) {
+    return;
+  }
+
+  els.settingPosterName.value = safeText(currentUser?.display_name || '');
+
+  await reloadAll().catch((err) => {
+    els.itemsContainer.innerHTML =
+      '<div class="empty">読み込みに失敗しました<br>' +
+      escapeHtml(err.message || '') +
+      '</div>';
+  });
+
+  if (localStorage.getItem('inventory_setup_done') !== '1') {
+    els.setupPosterName.value = safeText(currentUser?.display_name || '');
+    renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
+    els.setupBackdrop.classList.add('show');
+  }
+})();
 window.consumeItem = consumeItem;
 window.submitConsume = submitConsume;
 window.editItem = editItem;
