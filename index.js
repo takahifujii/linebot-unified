@@ -2643,9 +2643,43 @@ async function validateSessionOnLoad() {
     els.setupSaveBtn.addEventListener('click', submitInitialSetup);
     els.saveSettingsBtn.addEventListener('click', saveAccountSettings);
     els.logoutBtn.addEventListener('click', logout);
+loadSettings();
+loadAuth();
+updateLoginUserLabel();
 
-alert('script-start');
-els.pinBackdrop.classList.add('show');
+renderThemeButtons(els.themeGrid, settings.theme, 'account');
+renderPhotoPreview();
+
+(async () => {
+  const ok = await validateSessionOnLoad();
+
+  if (!ok) {
+    return;
+  }
+
+  els.settingPosterName.value = safeText(currentUser?.display_name || '');
+
+  await reloadAll().catch((err) => {
+    els.itemsContainer.innerHTML =
+      '<div class="empty">読み込みに失敗しました<br>' +
+      escapeHtml(err.message || '') +
+      '</div>';
+  });
+
+  if (localStorage.getItem('inventory_setup_done') !== '1') {
+    els.setupPosterName.value = safeText(currentUser?.display_name || '');
+    renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
+    els.setupBackdrop.classList.add('show');
+  }
+})();
+
+window.consumeItem = consumeItem;
+window.submitConsume = submitConsume;
+window.editItem = editItem;
+window.submitEdit = submitEdit;
+window.openCameraFromModal = openCameraFromModal;
+window.openLibraryFromModal = openLibraryFromModal;
+window.clearPhotoFromModal = clearPhotoFromModal;
   </script>
 </body>
 </html>
