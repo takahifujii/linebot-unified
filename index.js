@@ -2302,18 +2302,13 @@ function updateLoginUserLabel() {
         const photos = getPhotoUrls(item);
         let thumbHtml = '画像なし';
 
-        if (photos.length > 0) {
-          const cands = buildDriveImageCandidates(photos[0]);
-          const c0 = escapeHtml(cands[0] || '');
-          const c1 = escapeHtml(cands[1] || '');
-          const c2 = escapeHtml(cands[2] || '');
+      if (photos.length > 0) {
+  const cands = buildDriveImageCandidates(photos[0]);
+  const c0 = escapeHtml(cands[0] || '');
 
-          thumbHtml =
-            '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
-            ' onerror="if(!this.dataset.f1 && \'' + c1 + '\'){this.dataset.f1=\'1\';this.src=\'' + c1 + '\';return;} if(!this.dataset.f2 && \'' + c2 + '\'){this.dataset.f2=\'1\';this.src=\'' + c2 + '\';return;} this.onerror=null; this.outerHTML=\'<span>画像なし</span>\';"' +
-            ' />';
-        }
-
+  thumbHtml =
+    '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '" />';
+}
         const chipValues = [item.category_l, item.category_m, item.category_s, item.location]
           .map((v) => safeText(v).trim())
           .filter(Boolean);
