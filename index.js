@@ -2218,33 +2218,39 @@ app.get('/inventory', (req, res) => {
       els.modalBody.innerHTML = '';
     }
 
-    function filterItems() {
-      const q = safeText(els.searchInput.value).trim().toLowerCase();
+   function filterItems() {
+  const q = safeText(els.searchInput.value).trim().toLowerCase();
 
-      filteredItems = allItems.filter((item) => {
-        if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
-          return false;
-        }
+  filteredItems = allItems.filter((item) => {
+    const qty = Number(item.qty || 0);
 
-        if (q) {
-          const hay = [
-            item.name,
-            item.category_l,
-            item.category_m,
-            item.category_s,
-            item.location,
-            item.status
-          ].join(' ').toLowerCase();
-
-          if (!hay.includes(q)) return false;
-        }
-
-        return true;
-      });
-
-      renderItems();
+    // 数量0以下は表示しない
+    if (qty <= 0) {
+      return false;
     }
 
+    if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
+      return false;
+    }
+
+    if (q) {
+      const hay = [
+        item.name,
+        item.category_l,
+        item.category_m,
+        item.category_s,
+        item.location,
+        item.status
+      ].join(' ').toLowerCase();
+
+      if (!hay.includes(q)) return false;
+    }
+
+    return true;
+  });
+
+  renderItems();
+}
     function renderItems() {
       if (!filteredItems.length) {
         els.itemsContainer.innerHTML = '<div class="empty">条件に合う在庫がありません。</div>';
