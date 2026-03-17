@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -679,6 +680,136 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ------------------------------------------
+// 在庫アプリ認証ヘルパー
+// ------------------------------------------
+const INVENTORY_LOGIN_USERNAME = process.env.INVENTORY_LOGIN_USERNAME || '';
+const INVENTORY_LOGIN_PIN = process.env.INVENTORY_LOGIN_PIN || '';
+const APP_SESSION_SECRET = process.env.APP_SESSION_SECRET || '';
+
+function base64UrlEncode(text) {
+  return Buffer.from(text, 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function base64UrlDecode(text) {
+  const normalized = text.replace(/-/g, '+').replace(/_/g, '/');
+  const padLength = (4 - (normalized.length % 4)) % 4;
+  const padded = normalized + '='.repeat(padLength);
+  return Buffer.from(padded, 'base64').toString('utf8');
+}
+
+function signSessionPayload(payload) {
+  requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
+
+  const body = base64UrlEncode(JSON.stringify(payload));
+  const sig = crypto
+    .createHmac('sha256', APP_SESSION_SECRET)
+    .update(body)
+    .digest('hex');
+
+  return `${body}.${sig}`;
+}
+
+function verifySessionToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
+
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+
+  const [body, sig] = parts;
+
+  const expected = crypto
+    .createHmac('sha256', APP_SESSION_SECRET)
+    .update(body)
+    .digest('hex');
+
+  if (sig !== expected) return null;
+
+  try {
+    const payload = JSON.parse(base64UrlDecode(body));
+    if (!payload || !payload.username || !payload.exp) return null;
+    if (Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function getBearerToken(req) {
+  const auth = req.headers.authorization || '';
+  if (auth.startsWith('Bearer ')) {
+    return auth.slice(7).trim();
+  }
+  return '';
+}
+
+function requireInventoryAuth(req, res, next) {
+  try {
+    const token = getBearerToken(req);
+    const session = verifySessionToken(token);
+
+    if (!session) {
+      return res.status(401).json({ error: 'ログインが必要です' });
+    }
+
+    req.inventoryUser = session;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: '認証に失敗しました' });
+  }
+}
+
+// ------------------------------------------
+// 在庫アプリ ログインAPI
+// ------------------------------------------
+app.post('/api/login', async (req, res) => {
+  try {
+    const username = String(req.body?.username || '').trim();
+    const pin = String(req.body?.pin || '').trim();
+
+    requireEnv('INVENTORY_LOGIN_USERNAME', INVENTORY_LOGIN_USERNAME);
+    requireEnv('INVENTORY_LOGIN_PIN', INVENTORY_LOGIN_PIN);
+    requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
+
+    if (!username || !pin) {
+      return res.status(400).json({ error: '名前とPINが必要です' });
+    }
+
+    if (username !== INVENTORY_LOGIN_USERNAME || pin !== INVENTORY_LOGIN_PIN) {
+      return res.status(401).json({ error: '名前またはPINが違います' });
+    }
+
+    const payload = {
+      username,
+      exp: Date.now() + 1000 * 60 * 60 * 24 * 30
+    };
+
+    const token = signSessionPayload(payload);
+
+    return res.json({
+      ok: true,
+      token,
+      user: { username }
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message || 'ログインに失敗しました' });
+  }
+});
+
+app.get('/api/session', requireInventoryAuth, async (req, res) => {
+  return res.json({
+    ok: true,
+    user: {
+      username: req.inventoryUser.username
+    }
+  });
+});
+
+// ------------------------------------------
 // GPTテストAPI
 // ------------------------------------------
 app.post('/chat', async (req, res) => {
@@ -725,11 +856,10 @@ app.get('/logtest', (req, res) => {
   console.log('🧪 ログ出力テスト成功！');
   res.send('ログ出力したよ！');
 });
-
 // ------------------------------------------
 // 在庫API
 // ------------------------------------------
-app.get('/api/items', async (req, res) => {
+app.get('/api/items', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryGet('getItems');
     const items = unwrapGasResponse(gasResponse);
@@ -740,7 +870,7 @@ app.get('/api/items', async (req, res) => {
   }
 });
 
-app.get('/api/items/:id', async (req, res) => {
+app.get('/api/items/:id', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryGet('getItem', { id: req.params.id });
     const item = unwrapGasResponse(gasResponse);
@@ -751,7 +881,7 @@ app.get('/api/items/:id', async (req, res) => {
   }
 });
 
-app.get('/api/logs', async (req, res) => {
+app.get('/api/logs', requireInventoryAuth, async (req, res) => {
   try {
     const itemId = req.query.item_id || '';
     const gasResponse = await callInventoryGet('getLogs', itemId ? { item_id: itemId } : {});
@@ -763,7 +893,7 @@ app.get('/api/logs', async (req, res) => {
   }
 });
 
-app.get('/api/master', async (req, res) => {
+app.get('/api/master', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryGet('getMasters');
     const master = unwrapGasResponse(gasResponse);
@@ -773,9 +903,15 @@ app.get('/api/master', async (req, res) => {
     res.status(500).json({ error: err.message || 'マスタ取得に失敗しました' });
   }
 });
-app.post('/api/items', async (req, res) => {
+
+app.post('/api/items', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('createItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('createItem', payload);
     const item = unwrapGasResponse(gasResponse);
     res.json(item);
   } catch (err) {
@@ -784,9 +920,14 @@ app.post('/api/items', async (req, res) => {
   }
 });
 
-app.post('/api/items/update', async (req, res) => {
+app.post('/api/items/update', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('updateItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('updateItem', payload);
     const item = unwrapGasResponse(gasResponse);
     res.json(item);
   } catch (err) {
@@ -795,9 +936,14 @@ app.post('/api/items/update', async (req, res) => {
   }
 });
 
-app.post('/api/items/use', async (req, res) => {
+app.post('/api/items/use', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('consumeItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('consumeItem', payload);
     const item = unwrapGasResponse(gasResponse);
     res.json(item);
   } catch (err) {
@@ -806,9 +952,14 @@ app.post('/api/items/use', async (req, res) => {
   }
 });
 
-app.post('/api/items/archive', async (req, res) => {
+app.post('/api/items/archive', requireInventoryAuth, async (req, res) => {
   try {
-    const gasResponse = await callInventoryPost('archiveItem', req.body);
+    const payload = {
+      ...req.body,
+      user: req.inventoryUser.username || 'Unknown',
+    };
+
+    const gasResponse = await callInventoryPost('archiveItem', payload);
     const result = unwrapGasResponse(gasResponse);
     res.json(result);
   } catch (err) {
@@ -817,7 +968,7 @@ app.post('/api/items/archive', async (req, res) => {
   }
 });
 
-app.post('/api/items/init', async (req, res) => {
+app.post('/api/items/init', requireInventoryAuth, async (req, res) => {
   try {
     const gasResponse = await callInventoryPost('init', {});
     const result = unwrapGasResponse(gasResponse);
@@ -827,7 +978,6 @@ app.post('/api/items/init', async (req, res) => {
     res.status(500).json({ error: err.message || '初期化に失敗しました' });
   }
 });
-
 // ------------------------------------------
 // スマホ向け在庫管理画面
 // ------------------------------------------
@@ -847,8 +997,8 @@ app.get('/inventory', (req, res) => {
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <style>
   body {
-  font-size:10px;
-}
+    font-size:10px;
+  }
     :root{
       --bg:#0b1636;
       --card:#1e2b4b;
@@ -900,6 +1050,11 @@ app.get('/inventory', (req, res) => {
       letter-spacing:0.02em;
     }
     .title-sub{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .login-user{
       margin-top:4px;
       font-size:12px;
       color:var(--muted);
@@ -1348,6 +1503,7 @@ app.get('/inventory', (req, res) => {
         <div>
           <div class="title">在庫管理</div>
           <div class="title-sub">リフォーム工房アントレ 在庫アプリ</div>
+          <div class="login-user" id="loginUserLabel"></div>
         </div>
         <button class="round-btn" id="refreshBtn">↻</button>
       </div>
@@ -1464,8 +1620,8 @@ app.get('/inventory', (req, res) => {
         <div style="height:18px;"></div>
 
         <div class="field">
-          <label>PIN認証をリセット</label>
-          <button class="btn btn-danger" style="width:100%; border-radius:18px; padding:14px 16px;" id="resetPinBtn">次回起動時にPINを再入力</button>
+          <label>ログイン管理</label>
+          <button class="btn btn-danger" style="width:100%; border-radius:18px; padding:14px 16px;" id="logoutBtn">ログアウト</button>
         </div>
       </div>
     </div>
@@ -1495,8 +1651,11 @@ app.get('/inventory', (req, res) => {
 
   <div class="modal-backdrop" id="pinBackdrop">
     <div class="modal">
-      <div class="pin-title">PINコード入力</div>
-      <div class="pin-note">初回のみ、PINコードを入力してください</div>
+      <div class="pin-title">ログイン</div>
+      <div class="pin-note">名前とPINコードを入力してください</div>
+      <div class="field">
+        <input id="loginUsernameInput" class="input" type="text" placeholder="名前" />
+      </div>
       <div class="field">
         <input id="pinInput" class="input" type="password" inputmode="numeric" placeholder="PINコード" />
       </div>
@@ -1529,6 +1688,8 @@ app.get('/inventory', (req, res) => {
     let masterLocations = [];
     let activeMainTab = 'all';
     let selectedPhotoBase64 = '';
+    let currentToken = '';
+    let currentUser = null;
 
     let settings = {
       posterName: '',
@@ -1558,6 +1719,8 @@ app.get('/inventory', (req, res) => {
       navCreate: document.getElementById('navCreate'),
       navAccount: document.getElementById('navAccount'),
 
+      loginUserLabel: document.getElementById('loginUserLabel'),
+
       photoZone: document.getElementById('photoZone'),
       cameraInput: document.getElementById('cameraInput'),
       photoInput: document.getElementById('photoInput'),
@@ -1579,7 +1742,7 @@ app.get('/inventory', (req, res) => {
       settingPosterName: document.getElementById('settingPosterName'),
       themeGrid: document.getElementById('themeGrid'),
       saveSettingsBtn: document.getElementById('saveSettingsBtn'),
-      resetPinBtn: document.getElementById('resetPinBtn'),
+      logoutBtn: document.getElementById('logoutBtn'),
 
       modalBackdrop: document.getElementById('modalBackdrop'),
       modalTitle: document.getElementById('modalTitle'),
@@ -1587,6 +1750,7 @@ app.get('/inventory', (req, res) => {
       closeModalBtn: document.getElementById('closeModalBtn'),
 
       pinBackdrop: document.getElementById('pinBackdrop'),
+      loginUsernameInput: document.getElementById('loginUsernameInput'),
       pinInput: document.getElementById('pinInput'),
       pinSubmitBtn: document.getElementById('pinSubmitBtn'),
 
@@ -1622,6 +1786,59 @@ app.get('/inventory', (req, res) => {
       }
       out.sort((a, b) => a.localeCompare(b, 'ja'));
       return out;
+    }
+
+    function saveAuth(user, token) {
+      currentUser = user || null;
+      currentToken = token || '';
+      localStorage.setItem('inventory_auth', JSON.stringify({
+        user: currentUser,
+        token: currentToken
+      }));
+      updateLoginUserLabel();
+    }
+
+    function clearAuth() {
+      currentUser = null;
+      currentToken = '';
+      localStorage.removeItem('inventory_auth');
+      localStorage.removeItem('inventory_setup_done');
+      updateLoginUserLabel();
+    }
+
+    function loadAuth() {
+      try {
+        const raw = localStorage.getItem('inventory_auth');
+        if (!raw) {
+          currentUser = null;
+          currentToken = '';
+          updateLoginUserLabel();
+          return;
+        }
+        const auth = JSON.parse(raw);
+        currentUser = auth.user || null;
+        currentToken = auth.token || '';
+        updateLoginUserLabel();
+      } catch {
+        currentUser = null;
+        currentToken = '';
+        updateLoginUserLabel();
+      }
+    }
+
+    function updateLoginUserLabel() {
+      if (currentUser && currentUser.username) {
+        els.loginUserLabel.textContent = 'ログイン中: ' + currentUser.username;
+      } else {
+        els.loginUserLabel.textContent = '';
+      }
+    }
+
+    function authHeaders(extra = {}) {
+      return {
+        ...extra,
+        Authorization: 'Bearer ' + currentToken
+      };
     }
 
     function applyTheme(themeKey) {
@@ -1672,37 +1889,98 @@ app.get('/inventory', (req, res) => {
           } else {
             renderThemeButtons(els.themeGrid, settings.theme, 'account');
           }
+          applyTheme(settings.theme);
         });
       });
     }
 
-    function checkPinFlow() {
-      const pinOk = localStorage.getItem('inventory_pin_ok') === '1';
-      const setupDone = localStorage.getItem('inventory_setup_done') === '1';
-
-      if (!pinOk) {
+    function checkLoginFlow() {
+      if (!currentToken) {
         els.pinBackdrop.classList.add('show');
         return;
       }
 
-      if (!setupDone) {
+      if (localStorage.getItem('inventory_setup_done') !== '1') {
         renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
         els.setupBackdrop.classList.add('show');
       }
     }
 
-    function submitPin() {
+    async function apiFetch(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: authHeaders(options.headers || {})
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || '通信エラーが発生しました');
+      }
+
+      return data;
+    }
+
+    async function validateSessionOnLoad() {
+      if (!currentToken) {
+        clearAuth();
+        els.pinBackdrop.classList.add('show');
+        return false;
+      }
+
+      try {
+        const data = await apiFetch('/api/session');
+        currentUser = data.user || null;
+        saveAuth(currentUser, currentToken);
+        return true;
+      } catch (err) {
+        clearAuth();
+        els.pinBackdrop.classList.add('show');
+        return false;
+      }
+    }
+
+    async function submitPin() {
+      const username = els.loginUsernameInput.value.trim();
       const pin = els.pinInput.value.trim();
-      if (pin === '1616') {
-        localStorage.setItem('inventory_pin_ok', '1');
+
+      if (!username) {
+        alert('名前を入力してください');
+        return;
+      }
+
+      if (!pin) {
+        alert('PINコードを入力してください');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, pin })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(data.error || 'ログインに失敗しました');
+        }
+
+        saveAuth(data.user, data.token);
         els.pinBackdrop.classList.remove('show');
+        els.pinInput.value = '';
 
         if (localStorage.getItem('inventory_setup_done') !== '1') {
           renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
           els.setupBackdrop.classList.add('show');
+        } else {
+          els.settingPosterName.value = settings.posterName;
         }
-      } else {
-        alert('PINコードが違います');
+
+        await reloadAll();
+      } catch (err) {
+        alert(err.message || 'ログインに失敗しました');
       }
     }
 
@@ -1730,9 +2008,12 @@ app.get('/inventory', (req, res) => {
       alert('設定を保存しました');
     }
 
-    function resetPin() {
-      localStorage.removeItem('inventory_pin_ok');
-      alert('PINをリセットしました。次回起動時に再入力されます');
+    function logout() {
+      clearAuth();
+      allItems = [];
+      filteredItems = [];
+      els.itemsContainer.innerHTML = '<div class="empty">ログアウトしました。</div>';
+      els.pinBackdrop.classList.add('show');
     }
 
     function extractDriveFileId(url) {
@@ -1819,21 +2100,21 @@ app.get('/inventory', (req, res) => {
       if (smallList.includes(prevS)) els.categoryS.value = prevS;
     }
 
-   function refreshLocationSelect() {
-  const locations = uniqueSorted(masterLocations);
-  let html = '<option value="">保管場所を選択</option>';
+    function refreshLocationSelect() {
+      const locations = uniqueSorted(masterLocations);
+      let html = '<option value="">保管場所を選択</option>';
 
-  locations.forEach((loc) => {
-    html += '<option value="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</option>';
-  });
+      locations.forEach((loc) => {
+        html += '<option value="' + escapeHtml(loc) + '">' + escapeHtml(loc) + '</option>';
+      });
 
-  html += '<option value="__other__">その他</option>';
-  els.locationSelect.innerHTML = html;
+      html += '<option value="__other__">その他</option>';
+      els.locationSelect.innerHTML = html;
 
-  if (locations.includes('白鳥')) {
-    els.locationSelect.value = '白鳥';
-  }
-}
+      if (locations.includes('白鳥')) {
+        els.locationSelect.value = '白鳥';
+      }
+    }
 
     function updateLocationOtherVisibility() {
       if (els.locationSelect.value === '__other__') {
@@ -2057,12 +2338,7 @@ app.get('/inventory', (req, res) => {
     }
 
     async function loadMasters() {
-      const res = await fetch('/api/master');
-      const data = await res.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
+      const data = await apiFetch('/api/master');
 
       masterCategories = Array.isArray(data.categories) ? data.categories : [];
       masterLocations = Array.isArray(data.locations) ? data.locations : [];
@@ -2073,8 +2349,7 @@ app.get('/inventory', (req, res) => {
     }
 
     async function loadItems() {
-      const res = await fetch('/api/items');
-      const data = await res.json();
+      const data = await apiFetch('/api/items');
 
       if (!Array.isArray(data)) {
         throw new Error(data && data.error ? data.error : '在庫データの取得に失敗しました');
@@ -2105,31 +2380,30 @@ app.get('/inventory', (req, res) => {
           qty: Number(els.qty.value || 0),
           unit: els.unit.value.trim() || '個',
           threshold: els.threshold.value === '' ? '' : Number(els.threshold.value || 0),
-          user: settings.posterName || 'Unknown',
           note: els.note.value.trim() || '在庫登録',
           addIfSameName: els.addIfSameName.checked,
           photo_base64: selectedPhotoBase64 || ''
         };
 
-if (!payload.name) {
-  alert('品名を入力してください');
-  return;
-}
-if (!payload.category_l) {
-  alert('大分類を選択してください');
-  return;
-}
-if (!payload.location) {
-  alert('保管場所を選択してください');
-  return;
-}
-        const res = await fetch('/api/items', {
+        if (!payload.name) {
+          alert('品名を入力してください');
+          return;
+        }
+        if (!payload.category_l) {
+          alert('大分類を選択してください');
+          return;
+        }
+        if (!payload.location) {
+          alert('保管場所を選択してください');
+          return;
+        }
+
+        const data = await apiFetch('/api/items', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
         if (data.error) throw new Error(data.error);
 
         alert('登録しました');
@@ -2169,7 +2443,6 @@ if (!payload.location) {
         const payload = {
           item_id: itemId,
           consume_qty: Number(document.getElementById('consume_qty').value || 0),
-          user: settings.posterName || 'Unknown',
           note: document.getElementById('consume_note').value.trim() || '使用・消費'
         };
 
@@ -2178,13 +2451,12 @@ if (!payload.location) {
           return;
         }
 
-        const res = await fetch('/api/items/use', {
+        const data = await apiFetch('/api/items/use', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
         if (data.error) throw new Error(data.error);
 
         closeModal();
@@ -2196,8 +2468,7 @@ if (!payload.location) {
 
     async function editItem(itemId) {
       try {
-        const res = await fetch('/api/items/' + encodeURIComponent(itemId));
-        const item = await res.json();
+        const item = await apiFetch('/api/items/' + encodeURIComponent(itemId));
         if (item.error) throw new Error(item.error);
 
         let html = '';
@@ -2228,17 +2499,15 @@ if (!payload.location) {
           location: document.getElementById('edit_location').value.trim(),
           unit: document.getElementById('edit_unit').value.trim() || '個',
           threshold: document.getElementById('edit_threshold').value === '' ? '' : Number(document.getElementById('edit_threshold').value || 0),
-          user: settings.posterName || 'Unknown',
           note: document.getElementById('edit_note').value.trim() || '在庫情報更新'
         };
 
-        const res = await fetch('/api/items/update', {
+        const data = await apiFetch('/api/items/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
         if (data.error) throw new Error(data.error);
 
         closeModal();
@@ -2306,19 +2575,33 @@ if (!payload.location) {
     els.pinInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') submitPin();
     });
+    els.loginUsernameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submitPin();
+    });
 
     els.setupSaveBtn.addEventListener('click', submitInitialSetup);
     els.saveSettingsBtn.addEventListener('click', saveAccountSettings);
-    els.resetPinBtn.addEventListener('click', resetPin);
+    els.logoutBtn.addEventListener('click', logout);
 
     loadSettings();
+    loadAuth();
     renderThemeButtons(els.themeGrid, settings.theme, 'account');
     renderPhotoPreview();
-    checkPinFlow();
+    checkLoginFlow();
 
-    reloadAll().catch((err) => {
-      els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
-    });
+    (async () => {
+      const ok = await validateSessionOnLoad();
+      if (!ok) return;
+
+      await reloadAll().catch((err) => {
+        els.itemsContainer.innerHTML = '<div class="empty">読み込みに失敗しました<br>' + escapeHtml(err.message || '') + '</div>';
+      });
+
+      if (localStorage.getItem('inventory_setup_done') !== '1') {
+        renderThemeButtons(els.setupThemeGrid, settings.theme, 'setup');
+        els.setupBackdrop.classList.add('show');
+      }
+    })();
 
     window.consumeItem = consumeItem;
     window.submitConsume = submitConsume;
