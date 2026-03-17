@@ -2042,7 +2042,7 @@ app.get('/inventory', (req, res) => {
       const raw = safeText(url).trim();
       if (!raw) return '';
 
-      const fileMatch = raw.match(/\\/file\\/d\\/([^/]+)/);
+      const fileMatch = raw.match(/\/file\/d\/([^/]+)/);
       if (fileMatch && fileMatch[1]) return fileMatch[1];
 
       const idMatch = raw.match(/[?&]id=([^&]+)/);
