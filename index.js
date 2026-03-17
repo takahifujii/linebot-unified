@@ -682,92 +682,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ------------------------------------------
 // 在庫アプリ認証ヘルパー
 // ------------------------------------------
-const INVENTORY_LOGIN_USERNAME = process.env.INVENTORY_LOGIN_USERNAME || '';
-const INVENTORY_LOGIN_PIN = process.env.INVENTORY_LOGIN_PIN || '';
-const APP_SESSION_SECRET = process.env.APP_SESSION_SECRET || '';
-
-function base64UrlEncode(text) {
-  return Buffer.from(text, 'utf8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
-}
-
-function base64UrlDecode(text) {
-  const normalized = text.replace(/-/g, '+').replace(/_/g, '/');
-  const padLength = (4 - (normalized.length % 4)) % 4;
-  const padded = normalized + '='.repeat(padLength);
-  return Buffer.from(padded, 'base64').toString('utf8');
-}
-
-function signSessionPayload(payload) {
-  requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
-
-  const body = base64UrlEncode(JSON.stringify(payload));
-  const sig = crypto
-    .createHmac('sha256', APP_SESSION_SECRET)
-    .update(body)
-    .digest('hex');
-
-  return `${body}.${sig}`;
-}
-
-function verifySessionToken(token) {
-  if (!token || typeof token !== 'string') return null;
-  requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
-
-  const parts = token.split('.');
-  if (parts.length !== 2) return null;
-
-  const [body, sig] = parts;
-
-  const expected = crypto
-    .createHmac('sha256', APP_SESSION_SECRET)
-    .update(body)
-    .digest('hex');
-
-  if (sig !== expected) return null;
-
-  try {
-    const payload = JSON.parse(base64UrlDecode(body));
-    if (!payload || !payload.username || !payload.exp) return null;
-    if (Date.now() > payload.exp) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-function getBearerToken(req) {
-  const auth = req.headers.authorization || '';
-  if (auth.startsWith('Bearer ')) {
-    return auth.slice(7).trim();
-  }
-  return '';
-}
-
-function requireInventoryAuth(req, res, next) {
-  try {
-    const token = getBearerToken(req);
-    const session = verifySessionToken(token);
-
-    if (!session) {
-      return res.status(401).json({ error: 'ログインが必要です' });
-    }
-
-    req.inventoryUser = session;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: '認証に失敗しました' });
-  }
-}
-
-// ------------------------------------------
-// 在庫アプリ ログインAPI
-// ------------------------------------------
-
 const INVENTORY_LOGIN_USERS = process.env.INVENTORY_LOGIN_USERS || '';
+const APP_SESSION_SECRET = process.env.APP_SESSION_SECRET || '';
 
 function parseInventoryUsers() {
   return INVENTORY_LOGIN_USERS
@@ -784,98 +700,27 @@ function parseInventoryUsers() {
     .filter(v => v.username && v.pin);
 }
 
-function base64UrlEncode(text) {
-  return Buffer.from(text, 'utf8')
-    .toString('base64')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/g, '');
-}
 
-function base64UrlDecode(text) {
-  const normalized = text.replace(/-/g, '+').replace(/_/g, '/');
-  const padLength = (4 - (normalized.length % 4)) % 4;
-  const padded = normalized + '='.repeat(padLength);
-  return Buffer.from(padded, 'base64').toString('utf8');
-}
 
-function signSessionPayload(payload) {
-  requireEnv('APP_SESSION_SECRET', process.env.APP_SESSION_SECRET);
-
-  const body = base64UrlEncode(JSON.stringify(payload));
-  const sig = crypto
-    .createHmac('sha256', process.env.APP_SESSION_SECRET)
-    .update(body)
-    .digest('hex');
-
-  return `${body}.${sig}`;
-}
-
-function verifySessionToken(token) {
-  if (!token || typeof token !== 'string') return null;
-
-  requireEnv('APP_SESSION_SECRET', process.env.APP_SESSION_SECRET);
-
-  const parts = token.split('.');
-  if (parts.length !== 2) return null;
-
-  const [body, sig] = parts;
-
-  const expected = crypto
-    .createHmac('sha256', process.env.APP_SESSION_SECRET)
-    .update(body)
-    .digest('hex');
-
-  if (sig !== expected) return null;
-
-  try {
-    const payload = JSON.parse(base64UrlDecode(body));
-    if (!payload || !payload.username || !payload.exp) return null;
-    if (Date.now() > payload.exp) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-function getBearerToken(req) {
-  const auth = req.headers.authorization || '';
-  if (auth.startsWith('Bearer ')) {
-    return auth.slice(7).trim();
-  }
-  return '';
-}
-
-function requireInventoryAuth(req, res, next) {
-  try {
-    const token = getBearerToken(req);
-    const session = verifySessionToken(token);
-
-    if (!session) {
-      return res.status(401).json({ error: 'ログインが必要です' });
-    }
-
-    req.inventoryUser = session;
-    next();
-  } catch (err) {
-    return res.status(401).json({ error: '認証に失敗しました' });
-  }
-}
-
+// ------------------------------------------
+// 在庫アプリ ログインAPI
+// ------------------------------------------
 app.post('/api/login', async (req, res) => {
   try {
     const username = String(req.body?.username || '').trim();
     const pin = String(req.body?.pin || '').trim();
 
     requireEnv('INVENTORY_LOGIN_USERS', INVENTORY_LOGIN_USERS);
-    requireEnv('APP_SESSION_SECRET', process.env.APP_SESSION_SECRET);
+    requireEnv('APP_SESSION_SECRET', APP_SESSION_SECRET);
 
     if (!username || !pin) {
       return res.status(400).json({ error: '名前とPINが必要です' });
     }
 
     const users = parseInventoryUsers();
-    const matched = users.find(u => u.username === username && u.pin === pin);
+    const matched = users.find(
+      u => u.username === username && u.pin === pin
+    );
 
     if (!matched) {
       return res.status(401).json({ error: '名前またはPINが違います' });
