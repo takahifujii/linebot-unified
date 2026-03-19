@@ -2494,57 +2494,142 @@ app.get('/inventory', (req, res) => {
       }
     }
 
-    async function editItem(itemId) {
-      try {
-        const item = await apiFetch('/api/items/' + encodeURIComponent(itemId));
-        if (item.error) throw new Error(item.error);
+  async function editItem(itemId) {
+  try {
+    const item = await apiFetch('/api/items/' + encodeURIComponent(itemId));
+    if (item.error) throw new Error(item.error);
 
-        let html = '';
-        html += '<div class="field"><label>品名</label><input class="input" id="edit_name" value="' + escapeHtml(item.name || '') + '" /></div>';
-        html += '<div class="field"><label>保管場所</label><input class="input" id="edit_location" value="' + escapeHtml(item.location || '') + '" /></div>';
-        html += '<div class="field"><label>大分類</label><input class="input" id="edit_category_l" value="' + escapeHtml(item.category_l || '') + '" /></div>';
-        html += '<div class="field"><label>中分類</label><input class="input" id="edit_category_m" value="' + escapeHtml(item.category_m || '') + '" /></div>';
-        html += '<div class="field"><label>小分類</label><input class="input" id="edit_category_s" value="' + escapeHtml(item.category_s || '') + '" /></div>';
-        html += '<div class="field"><label>単位</label><input class="input" id="edit_unit" value="' + escapeHtml(item.unit || '個') + '" /></div>';
-        html += '<div class="field"><label>要発注ライン</label><input class="input" id="edit_threshold" type="number" value="' + escapeHtml(item.threshold == null ? '' : item.threshold) + '" /></div>';
-        html += '<div class="field"><label>メモ</label><input class="input" id="edit_note" value="在庫情報更新" /></div>';
-        html += '<button class="submit-btn" onclick="submitEdit(\\'' + escapeHtml(item.item_id) + '\\')">更新する</button>';
+    const largeList = getLargeNames();
+    const middleList = item.category_l ? getMiddleNames(item.category_l) : [];
+    const smallList = item.category_l && item.category_m
+      ? getSmallNames(item.category_l, item.category_m)
+      : [];
 
-        openModal('在庫を編集', html);
-      } catch (err) {
-        alert(err.message || '編集情報の取得に失敗しました');
-      }
+    const locationList = uniqueSorted(masterLocations);
+
+    function buildOptions(values, selectedValue, placeholder) {
+      let html = '<option value="">' + escapeHtml(placeholder) + '</option>';
+      values.forEach((v) => {
+        html += '<option value="' + escapeHtml(v) + '"' +
+          (safeText(v).trim() === safeText(selectedValue).trim() ? ' selected' : '') +
+          '>' + escapeHtml(v) + '</option>';
+      });
+      return html;
     }
 
-    async function submitEdit(itemId) {
-      try {
-        const payload = {
-          item_id: itemId,
-          name: document.getElementById('edit_name').value.trim(),
-          category_l: document.getElementById('edit_category_l').value.trim(),
-          category_m: document.getElementById('edit_category_m').value.trim(),
-          category_s: document.getElementById('edit_category_s').value.trim(),
-          location: document.getElementById('edit_location').value.trim(),
-          unit: document.getElementById('edit_unit').value.trim() || '個',
-          threshold: document.getElementById('edit_threshold').value === '' ? '' : Number(document.getElementById('edit_threshold').value || 0),
-          note: document.getElementById('edit_note').value.trim() || '在庫情報更新'
-        };
+    let html = '';
+    html += '<div class="field"><label>品名</label><input class="input" id="edit_name" value="' + escapeHtml(item.name || '') + '" /></div>';
 
-        const data = await apiFetch('/api/items/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+    html += '<div class="field"><label>保管場所</label>';
+    html += '<select class="select" id="edit_location">';
+    html += buildOptions(locationList, item.location || '', '保管場所を選択');
+    html += '</select></div>';
 
-        if (data.error) throw new Error(data.error);
+    html += '<div class="field"><label>大分類</label>';
+    html += '<select class="select" id="edit_category_l">';
+    html += buildOptions(largeList, item.category_l || '', '大分類を選択');
+    html += '</select></div>';
 
-        closeModal();
-        await loadItems();
-      } catch (err) {
-        alert(err.message || '更新に失敗しました');
-      }
+    html += '<div class="field"><label>中分類</label>';
+    html += '<select class="select" id="edit_category_m">';
+    html += buildOptions(middleList, item.category_m || '', '中分類を選択');
+    html += '</select></div>';
+
+    html += '<div class="field"><label>小分類</label>';
+    html += '<select class="select" id="edit_category_s">';
+    html += buildOptions(smallList, item.category_s || '', '小分類を選択');
+    html += '</select></div>';
+
+    html += '<div class="field"><label>在庫個数</label><input class="input" id="edit_qty" type="number" value="' + escapeHtml(item.qty == null ? '' : item.qty) + '" /></div>';
+    html += '<div class="field"><label>要発注ライン</label><input class="input" id="edit_threshold" type="number" value="' + escapeHtml(item.threshold == null ? '' : item.threshold) + '" /></div>';
+    html += '<div class="field"><label>メモ</label><input class="input" id="edit_note" value="在庫情報更新" /></div>';
+    html += '<button class="submit-btn" onclick="submitEdit(\'' + escapeHtml(item.item_id) + '\')">更新する</button>';
+
+    openModal('在庫を編集', html);
+
+    const editCategoryL = document.getElementById('edit_category_l');
+    const editCategoryM = document.getElementById('edit_category_m');
+    const editCategoryS = document.getElementById('edit_category_s');
+
+    function refreshEditMiddleAndSmall() {
+      const l = editCategoryL.value;
+      const m = editCategoryM.value;
+
+      const mids = l ? getMiddleNames(l) : [];
+      editCategoryM.innerHTML = buildOptions(mids, m, '中分類を選択');
+
+      const newM = editCategoryM.value;
+      const sms = l && newM ? getSmallNames(l, newM) : [];
+      editCategoryS.innerHTML = buildOptions(sms, '', '小分類を選択');
     }
 
+    function refreshEditSmall() {
+      const l = editCategoryL.value;
+      const m = editCategoryM.value;
+      const sms = l && m ? getSmallNames(l, m) : [];
+      editCategoryS.innerHTML = buildOptions(sms, '', '小分類を選択');
+    }
+
+    editCategoryL.addEventListener('change', () => {
+      refreshEditMiddleAndSmall();
+    });
+
+    editCategoryM.addEventListener('change', () => {
+      refreshEditSmall();
+    });
+
+  } catch (err) {
+    alert(err.message || '編集情報の取得に失敗しました');
+  }
+}
+
+async function submitEdit(itemId) {
+  try {
+    const payload = {
+      item_id: itemId,
+      name: document.getElementById('edit_name').value.trim(),
+      location: document.getElementById('edit_location').value.trim(),
+      category_l: document.getElementById('edit_category_l').value.trim(),
+      category_m: document.getElementById('edit_category_m').value.trim(),
+      category_s: document.getElementById('edit_category_s').value.trim(),
+      qty: Number(document.getElementById('edit_qty').value || 0),
+      threshold: document.getElementById('edit_threshold').value === ''
+        ? ''
+        : Number(document.getElementById('edit_threshold').value || 0),
+      note: document.getElementById('edit_note').value.trim() || '在庫情報更新'
+    };
+
+    if (!payload.name) {
+      alert('品名を入力してください');
+      return;
+    }
+    if (!payload.location) {
+      alert('保管場所を選択してください');
+      return;
+    }
+    if (!payload.category_l) {
+      alert('大分類を選択してください');
+      return;
+    }
+    if (payload.qty < 0) {
+      alert('在庫個数は0以上で入力してください');
+      return;
+    }
+
+    const data = await apiFetch('/api/items/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (data.error) throw new Error(data.error);
+
+    closeModal();
+    await loadItems();
+  } catch (err) {
+    alert(err.message || '更新に失敗しました');
+  }
+}
     els.searchInput.addEventListener('input', filterItems);
     els.refreshBtn.addEventListener('click', () => {
       reloadAll().catch((err) => alert(err.message || '更新に失敗しました'));
