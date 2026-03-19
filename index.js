@@ -2504,15 +2504,13 @@ app.get('/inventory', (req, res) => {
     const smallList = item.category_l && item.category_m
       ? getSmallNames(item.category_l, item.category_m)
       : [];
-
     const locationList = uniqueSorted(masterLocations);
 
     function buildOptions(values, selectedValue, placeholder) {
       let html = '<option value="">' + escapeHtml(placeholder) + '</option>';
       values.forEach((v) => {
-        html += '<option value="' + escapeHtml(v) + '"' +
-          (safeText(v).trim() === safeText(selectedValue).trim() ? ' selected' : '') +
-          '>' + escapeHtml(v) + '</option>';
+        const selected = safeText(v).trim() === safeText(selectedValue).trim() ? ' selected' : '';
+        html += '<option value="' + escapeHtml(v) + '"' + selected + '>' + escapeHtml(v) + '</option>';
       });
       return html;
     }
@@ -2543,39 +2541,42 @@ app.get('/inventory', (req, res) => {
     html += '<div class="field"><label>在庫個数</label><input class="input" id="edit_qty" type="number" value="' + escapeHtml(item.qty == null ? '' : item.qty) + '" /></div>';
     html += '<div class="field"><label>要発注ライン</label><input class="input" id="edit_threshold" type="number" value="' + escapeHtml(item.threshold == null ? '' : item.threshold) + '" /></div>';
     html += '<div class="field"><label>メモ</label><input class="input" id="edit_note" value="在庫情報更新" /></div>';
-    html += '<button class="submit-btn" onclick="submitEdit(\'' + escapeHtml(item.item_id) + '\')">更新する</button>';
+    html += '<button class="submit-btn" id="editSubmitBtn">更新する</button>';
 
     openModal('在庫を編集', html);
 
     const editCategoryL = document.getElementById('edit_category_l');
     const editCategoryM = document.getElementById('edit_category_m');
     const editCategoryS = document.getElementById('edit_category_s');
+    const editSubmitBtn = document.getElementById('editSubmitBtn');
 
-    function refreshEditMiddleAndSmall() {
+    function rebuildMiddle(selectedMiddle = '', selectedSmall = '') {
       const l = editCategoryL.value;
-      const m = editCategoryM.value;
-
       const mids = l ? getMiddleNames(l) : [];
-      editCategoryM.innerHTML = buildOptions(mids, m, '中分類を選択');
+      editCategoryM.innerHTML = buildOptions(mids, selectedMiddle, '中分類を選択');
 
-      const newM = editCategoryM.value;
-      const sms = l && newM ? getSmallNames(l, newM) : [];
-      editCategoryS.innerHTML = buildOptions(sms, '', '小分類を選択');
+      const m = editCategoryM.value;
+      const sms = l && m ? getSmallNames(l, m) : [];
+      editCategoryS.innerHTML = buildOptions(sms, selectedSmall, '小分類を選択');
     }
 
-    function refreshEditSmall() {
+    function rebuildSmall(selectedSmall = '') {
       const l = editCategoryL.value;
       const m = editCategoryM.value;
       const sms = l && m ? getSmallNames(l, m) : [];
-      editCategoryS.innerHTML = buildOptions(sms, '', '小分類を選択');
+      editCategoryS.innerHTML = buildOptions(sms, selectedSmall, '小分類を選択');
     }
 
     editCategoryL.addEventListener('change', () => {
-      refreshEditMiddleAndSmall();
+      rebuildMiddle('', '');
     });
 
     editCategoryM.addEventListener('change', () => {
-      refreshEditSmall();
+      rebuildSmall('');
+    });
+
+    editSubmitBtn.addEventListener('click', () => {
+      submitEdit(itemId);
     });
 
   } catch (err) {
@@ -2630,6 +2631,7 @@ async function submitEdit(itemId) {
     alert(err.message || '更新に失敗しました');
   }
 }
+
     els.searchInput.addEventListener('input', filterItems);
     els.refreshBtn.addEventListener('click', () => {
       reloadAll().catch((err) => alert(err.message || '更新に失敗しました'));
