@@ -1540,6 +1540,8 @@ app.get('/inventory', (req, res) => {
         <div class="tabs" id="mainTabs"></div>
       </div>
 
+<div id="testMarker" style="margin-bottom:14px; color:#fff;">テスト表示</div>
+
       <div class="screen active" id="screenList">
         <div class="items" id="itemsContainer"></div>
       </div>
