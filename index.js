@@ -1538,9 +1538,11 @@ app.get('/inventory', (req, res) => {
 
       <div class="tabs-wrap" id="tabsWrap">
         <div class="tabs" id="mainTabs"></div>
-      </div>
-
-<div id="testMarker" style="margin-bottom:14px; color:#fff;">テスト表示</div>
+      </div><div style="margin-bottom:14px;">
+  <select id="filterCategoryM" class="select">
+    <option value="">中分類で絞り込み</option>
+  </select>
+</div>
 
       <div class="screen active" id="screenList">
         <div class="items" id="itemsContainer"></div>
@@ -1742,6 +1744,7 @@ app.get('/inventory', (req, res) => {
       navList: document.getElementById('navList'),
       navCreate: document.getElementById('navCreate'),
       navAccount: document.getElementById('navAccount'),
+filterCategoryM: document.getElementById('filterCategoryM'),
 
       loginUserLabel: document.getElementById('loginUserLabel'),
 
