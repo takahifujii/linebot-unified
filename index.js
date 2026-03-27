@@ -2188,10 +2188,17 @@ els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
     }
 
 function refreshMiddleFilterOptions() {
-  let middleList = [];
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
 
-  if (activeMainTab !== 'all') {
+  let middleList = [];
+
+  if (activeMainTab === 'all') {
+    middleList = uniqueSorted(
+      masterCategories
+        .map(row => safeText(row.middle_name).trim())
+        .filter(Boolean)
+    );
+  } else {
     middleList = getMiddleNames(activeMainTab);
   }
 
@@ -2663,11 +2670,8 @@ async function submitEdit(itemId) {
 
     els.searchInput.addEventListener('input', filterItems);
     els.filterCategoryM.addEventListener('change', () => {
-  els.filterCategoryS.value = '';
-  refreshMiddleFilterOptions();
-  filterItems();
+ filterItems();
 });
-
 
     els.refreshBtn.addEventListener('click', () => {
       reloadAll().catch((err) => alert(err.message || '更新に失敗しました'));
