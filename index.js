@@ -1745,6 +1745,7 @@ app.get('/inventory', (req, res) => {
       navCreate: document.getElementById('navCreate'),
       navAccount: document.getElementById('navAccount'),
 filterCategoryM: document.getElementById('filterCategoryM'),
+filterCategoryS: document.getElementById('filterCategoryS'),
 
       loginUserLabel: document.getElementById('loginUserLabel'),
 
@@ -2177,28 +2178,44 @@ filterCategoryM: document.getElementById('filterCategoryM'),
 
       els.mainTabs.innerHTML = html;
 
-      els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
+els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
   btn.addEventListener('click', () => {
     activeMainTab = btn.getAttribute('data-key');
+    els.filterCategoryM.value = '';
+    els.filterCategoryS.value = '';
     refreshMiddleFilterOptions();
     filterItems();
   });
 });
+
     }
 
 function refreshMiddleFilterOptions() {
   let middleList = [];
+  let smallList = [];
+
+  const currentSelectedM = safeText(els.filterCategoryM.value).trim();
+  const currentSelectedS = safeText(els.filterCategoryS.value).trim();
 
   if (activeMainTab !== 'all') {
     middleList = getMiddleNames(activeMainTab);
   }
 
-  let html = '<option value="">中分類で絞り込み</option>';
-  middleList.forEach((v) => {
-    html += '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>';
-  });
+  setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
+  if (middleList.includes(currentSelectedM)) {
+    els.filterCategoryM.value = currentSelectedM;
+  }
 
-  els.filterCategoryM.innerHTML = html;
+  const selectedM = safeText(els.filterCategoryM.value).trim();
+
+  if (activeMainTab !== 'all' && selectedM) {
+    smallList = getSmallNames(activeMainTab, selectedM);
+  }
+
+  setSelectOptions(els.filterCategoryS, smallList, '小分類で絞り込み');
+  if (smallList.includes(currentSelectedS)) {
+    els.filterCategoryS.value = currentSelectedS;
+  }
 }
 
     function showScreen(name) {
@@ -2239,18 +2256,27 @@ function refreshMiddleFilterOptions() {
       els.modalBody.innerHTML = '';
     }
 
-   function filterItems() {
+ function filterItems() {
   const q = safeText(els.searchInput.value).trim().toLowerCase();
+  const selectedM = safeText(els.filterCategoryM.value).trim();
+  const selectedS = safeText(els.filterCategoryS.value).trim();
 
   filteredItems = allItems.filter((item) => {
     const qty = Number(item.qty || 0);
 
-    // 数量0以下は表示しない
     if (qty <= 0) {
       return false;
     }
 
     if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
+      return false;
+    }
+
+    if (selectedM && safeText(item.category_m).trim() !== selectedM) {
+      return false;
+    }
+
+    if (selectedS && safeText(item.category_s).trim() !== selectedS) {
       return false;
     }
 
@@ -2272,6 +2298,7 @@ function refreshMiddleFilterOptions() {
 
   renderItems();
 }
+
     function renderItems() {
       if (!filteredItems.length) {
         els.itemsContainer.innerHTML = '<div class="empty">条件に合う在庫がありません。</div>';
@@ -2656,6 +2683,15 @@ async function submitEdit(itemId) {
 }
 
     els.searchInput.addEventListener('input', filterItems);
+    els.filterCategoryM.addEventListener('change', () => {
+  els.filterCategoryS.value = '';
+  refreshMiddleFilterOptions();
+  filterItems();
+});
+
+els.filterCategoryS.addEventListener('change', () => {
+  filterItems();
+});
     els.refreshBtn.addEventListener('click', () => {
       reloadAll().catch((err) => alert(err.message || '更新に失敗しました'));
     });
