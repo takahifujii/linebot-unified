@@ -2243,7 +2243,6 @@ function refreshMiddleFilterOptions() {
  function filterItems() {
   const q = safeText(els.searchInput.value).trim().toLowerCase();
   const selectedM = safeText(els.filterCategoryM.value).trim();
-  const selectedS = safeText(els.filterCategoryS.value).trim();
 
   filteredItems = allItems.filter((item) => {
     const qty = Number(item.qty || 0);
@@ -2260,9 +2259,6 @@ function refreshMiddleFilterOptions() {
       return false;
     }
 
-    if (selectedS && safeText(item.category_s).trim() !== selectedS) {
-      return false;
-    }
 
     if (q) {
       const hay = [
@@ -2477,7 +2473,6 @@ refreshMiddleFilterOptions();
         els.note.value = '';
         els.categoryL.value = '';
         els.categoryM.value = '';
-        els.categoryS.value = '';
         els.locationSelect.value = '';
         els.locationOther.value = '';
         updateLocationOtherVisibility();
