@@ -1745,7 +1745,6 @@ app.get('/inventory', (req, res) => {
       navCreate: document.getElementById('navCreate'),
       navAccount: document.getElementById('navAccount'),
 filterCategoryM: document.getElementById('filterCategoryM'),
-filterCategoryS: document.getElementById('filterCategoryS'),
 
       loginUserLabel: document.getElementById('loginUserLabel'),
 
@@ -2182,39 +2181,24 @@ els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
   btn.addEventListener('click', () => {
     activeMainTab = btn.getAttribute('data-key');
     els.filterCategoryM.value = '';
-    els.filterCategoryS.value = '';
     refreshMiddleFilterOptions();
     filterItems();
   });
 });
-
     }
 
 function refreshMiddleFilterOptions() {
   let middleList = [];
-  let smallList = [];
-
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
-  const currentSelectedS = safeText(els.filterCategoryS.value).trim();
 
   if (activeMainTab !== 'all') {
     middleList = getMiddleNames(activeMainTab);
   }
 
   setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
+
   if (middleList.includes(currentSelectedM)) {
     els.filterCategoryM.value = currentSelectedM;
-  }
-
-  const selectedM = safeText(els.filterCategoryM.value).trim();
-
-  if (activeMainTab !== 'all' && selectedM) {
-    smallList = getSmallNames(activeMainTab, selectedM);
-  }
-
-  setSelectOptions(els.filterCategoryS, smallList, '小分類で絞り込み');
-  if (smallList.includes(currentSelectedS)) {
-    els.filterCategoryS.value = currentSelectedS;
   }
 }
 
@@ -2689,9 +2673,7 @@ async function submitEdit(itemId) {
   filterItems();
 });
 
-els.filterCategoryS.addEventListener('change', () => {
-  filterItems();
-});
+
     els.refreshBtn.addEventListener('click', () => {
       reloadAll().catch((err) => alert(err.message || '更新に失敗しました'));
     });
