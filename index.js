@@ -2178,12 +2178,28 @@ filterCategoryM: document.getElementById('filterCategoryM'),
       els.mainTabs.innerHTML = html;
 
       els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          activeMainTab = btn.getAttribute('data-key');
-          filterItems();
-        });
-      });
+  btn.addEventListener('click', () => {
+    activeMainTab = btn.getAttribute('data-key');
+    refreshMiddleFilterOptions();
+    filterItems();
+  });
+});
     }
+
+function refreshMiddleFilterOptions() {
+  let middleList = [];
+
+  if (activeMainTab !== 'all') {
+    middleList = getMiddleNames(activeMainTab);
+  }
+
+  let html = '<option value="">中分類で絞り込み</option>';
+  middleList.forEach((v) => {
+    html += '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>';
+  });
+
+  els.filterCategoryM.innerHTML = html;
+}
 
     function showScreen(name) {
       els.screenList.classList.remove('active');
@@ -2377,8 +2393,10 @@ filterCategoryM: document.getElementById('filterCategoryM'),
       masterLocations = Array.isArray(data.locations) ? data.locations : [];
 
       refreshCategorySelects();
-      refreshLocationSelect();
-      renderMainTabs();
+refreshLocationSelect();
+renderMainTabs();
+refreshMiddleFilterOptions();
+
     }
 
     async function loadItems() {
