@@ -2199,13 +2199,9 @@ els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
     filterItems();
   });
 });
-
 function refreshMiddleFilterOptions() {
   let middleList = [];
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
-
-  console.log('refreshMiddleFilterOptions start');
-  console.log('activeMainTab =', activeMainTab);
 
   if (activeMainTab !== 'all') {
     middleList = getMiddleNames(activeMainTab);
@@ -2213,6 +2209,15 @@ function refreshMiddleFilterOptions() {
   } else {
     els.middleFilterWrap.style.display = 'none';
   }
+
+  setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
+
+  if (middleList.includes(currentSelectedM)) {
+    els.filterCategoryM.value = currentSelectedM;
+  } else {
+    els.filterCategoryM.value = '';
+  }
+}
 
   console.log('middleList =', middleList);
 
