@@ -2166,26 +2166,24 @@ filterCategoryM: document.getElementById('filterCategoryM'),
       updateLocationOtherVisibility();
     }
 
-    function renderMainTabs() {
-      const tabs = ['all', ...getLargeNames()];
-      let html = '';
+  function renderMainTabs() {
+  const tabs = ['all', ...getLargeNames()];
+  let html = '';
 
-      tabs.forEach((key) => {
-        const label = key === 'all' ? '在庫一覧' : key;
-        html += '<button class="tab ' + (activeMainTab === key ? 'active' : '') + '" data-key="' + escapeHtml(key) + '">' + escapeHtml(label) + '</button>';
-      });
-
-      els.mainTabs.innerHTML = html;
-
-els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    activeMainTab = btn.getAttribute('data-key');
-    els.filterCategoryM.value = '';
-    refreshMiddleFilterOptions();
-    filterItems();
+  tabs.forEach((key) => {
+    const label = key === 'all' ? '在庫一覧' : key;
+    html += '<button class="tab ' + (activeMainTab === key ? 'active' : '') + '" data-key="' + escapeHtml(key) + '">' + escapeHtml(label) + '</button>';
   });
-});
-    }
+
+  els.mainTabs.innerHTML = html;
+
+  els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeMainTab = btn.getAttribute('data-key');
+      filterItems();
+    });
+  });
+}
 
 function refreshMiddleFilterOptions() {
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
@@ -2258,14 +2256,17 @@ function refreshMiddleFilterOptions() {
       return false;
     }
 
-    if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
-      return false;
+    // 中分類が選ばれているときは、中分類を優先して絞る
+    if (selectedM) {
+      if (safeText(item.category_m).trim() !== selectedM) {
+        return false;
+      }
+    } else {
+      // 中分類が未選択のときだけ大分類タブで絞る
+      if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
+        return false;
+      }
     }
-
-    if (selectedM && safeText(item.category_m).trim() !== selectedM) {
-      return false;
-    }
-
 
     if (q) {
       const hay = [
