@@ -2092,12 +2092,21 @@ filterCategoryM: document.getElementById('filterCategoryM'),
     }
 
     function getMiddleNames(largeName) {
-      return uniqueSorted(
-        masterCategories
-          .filter(row => safeText(row.large_name).trim() === safeText(largeName).trim())
-          .map(row => row.middle_name)
-      );
-    }
+  const result = uniqueSorted(
+    masterCategories
+      .filter(row => safeText(row.large_name).trim() === safeText(largeName).trim())
+      .map(row => row.middle_name)
+  );
+
+  console.log('getMiddleNames largeName =', largeName);
+  console.log(
+    'matched rows =',
+    masterCategories.filter(row => safeText(row.large_name).trim() === safeText(largeName).trim())
+  );
+  console.log('result =', result);
+
+  return result;
+}
 
     function getSmallNames(largeName, middleName) {
       return uniqueSorted(
@@ -2179,18 +2188,24 @@ filterCategoryM: document.getElementById('filterCategoryM'),
   });
 
   els.mainTabs.innerHTML = html;
+  
+els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    activeMainTab = btn.getAttribute('data-key');
+    console.log('tab clicked =', activeMainTab);
 
-  els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      activeMainTab = btn.getAttribute('data-key');
-      filterItems();
-    });
+    els.filterCategoryM.value = '';
+    refreshMiddleFilterOptions();
+    filterItems();
   });
-}
+});
 
 function refreshMiddleFilterOptions() {
   let middleList = [];
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
+
+  console.log('refreshMiddleFilterOptions start');
+  console.log('activeMainTab =', activeMainTab);
 
   if (activeMainTab !== 'all') {
     middleList = getMiddleNames(activeMainTab);
@@ -2198,6 +2213,17 @@ function refreshMiddleFilterOptions() {
   } else {
     els.middleFilterWrap.style.display = 'none';
   }
+
+  console.log('middleList =', middleList);
+
+  setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
+
+  if (middleList.includes(currentSelectedM)) {
+    els.filterCategoryM.value = currentSelectedM;
+  } else {
+    els.filterCategoryM.value = '';
+  }
+}
 
   setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
 
