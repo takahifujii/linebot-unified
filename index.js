@@ -1536,9 +1536,11 @@ app.get('/inventory', (req, res) => {
         <input id="searchInput" class="search-input" placeholder="品名・カテゴリ・場所を検索" />
       </div>
 
-      <div class="tabs-wrap" id="tabsWrap">
-        <div class="tabs" id="mainTabs"></div>
-      </div><div style="margin-bottom:14px;">
+<div class="tabs-wrap" id="tabsWrap">
+  <div class="tabs" id="mainTabs"></div>
+</div>
+
+<div id="middleFilterWrap" style="margin-bottom:14px; display:none;">
   <select id="filterCategoryM" class="select">
     <option value="">中分類で絞り込み</option>
   </select>
@@ -1742,8 +1744,9 @@ app.get('/inventory', (req, res) => {
       screenCreate: document.getElementById('screenCreate'),
       screenAccount: document.getElementById('screenAccount'),
       navList: document.getElementById('navList'),
-      navCreate: document.getElementById('navCreate'),
-      navAccount: document.getElementById('navAccount'),
+navCreate: document.getElementById('navCreate'),
+navAccount: document.getElementById('navAccount'),
+middleFilterWrap: document.getElementById('middleFilterWrap'),
 filterCategoryM: document.getElementById('filterCategoryM'),
 
       loginUserLabel: document.getElementById('loginUserLabel'),
@@ -2189,16 +2192,19 @@ function refreshMiddleFilterOptions() {
   let middleList = [];
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
 
-  if (activeMainTab === 'all') {
-    middleList = uniqueSorted(masterCategories.map(row => row.middle_name));
-  } else {
+  if (activeMainTab !== 'all') {
     middleList = getMiddleNames(activeMainTab);
+    els.middleFilterWrap.style.display = 'block';
+  } else {
+    els.middleFilterWrap.style.display = 'none';
   }
 
   setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
 
   if (middleList.includes(currentSelectedM)) {
     els.filterCategoryM.value = currentSelectedM;
+  } else {
+    els.filterCategoryM.value = '';
   }
 }
 
