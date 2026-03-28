@@ -2186,16 +2186,11 @@ filterCategoryM: document.getElementById('filterCategoryM'),
 }
 
 function refreshMiddleFilterOptions() {
+  let middleList = [];
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
 
-  let middleList = [];
-
   if (activeMainTab === 'all') {
-    middleList = uniqueSorted(
-      masterCategories
-        .map(row => safeText(row.middle_name).trim())
-        .filter(Boolean)
-    );
+    middleList = uniqueSorted(masterCategories.map(row => row.middle_name));
   } else {
     middleList = getMiddleNames(activeMainTab);
   }
@@ -2249,27 +2244,22 @@ function refreshMiddleFilterOptions() {
   const q = safeText(els.searchInput.value).trim().toLowerCase();
   const selectedM = safeText(els.filterCategoryM.value).trim();
 
-  console.log('--- filter start ---');
-  console.log('activeMainTab =', activeMainTab);
-  console.log('selectedM =', JSON.stringify(selectedM));
-  console.log(
-    'all item category_m =',
-    allItems.map(item => JSON.stringify(safeText(item.category_m).trim()))
-  );
-
   filteredItems = allItems.filter((item) => {
     const qty = Number(item.qty || 0);
-    const itemCategoryM = safeText(item.category_m).trim();
-    const itemCategoryL = safeText(item.category_l).trim();
 
-    if (qty <= 0) return false;
+    if (qty <= 0) {
+      return false;
+    }
+
+    if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
+      return false;
+    }
 
     if (selectedM) {
-      if (itemCategoryM !== selectedM) {
-        return false;
-      }
-    } else {
-      if (activeMainTab !== 'all' && itemCategoryL !== activeMainTab) {
+      const itemM = safeText(item.category_m).trim();
+      const itemS = safeText(item.category_s).trim();
+
+      if (itemM !== selectedM && itemS !== selectedM) {
         return false;
       }
     }
@@ -2290,12 +2280,8 @@ function refreshMiddleFilterOptions() {
     return true;
   });
 
-  console.log('filtered count =', filteredItems.length);
-  console.log('filtered items =', filteredItems);
-
   renderItems();
 }
-
 
     function renderItems() {
       if (!filteredItems.length) {
