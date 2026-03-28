@@ -2249,21 +2249,27 @@ function refreshMiddleFilterOptions() {
   const q = safeText(els.searchInput.value).trim().toLowerCase();
   const selectedM = safeText(els.filterCategoryM.value).trim();
 
+  console.log('--- filter start ---');
+  console.log('activeMainTab =', activeMainTab);
+  console.log('selectedM =', JSON.stringify(selectedM));
+  console.log(
+    'all item category_m =',
+    allItems.map(item => JSON.stringify(safeText(item.category_m).trim()))
+  );
+
   filteredItems = allItems.filter((item) => {
     const qty = Number(item.qty || 0);
+    const itemCategoryM = safeText(item.category_m).trim();
+    const itemCategoryL = safeText(item.category_l).trim();
 
-    if (qty <= 0) {
-      return false;
-    }
+    if (qty <= 0) return false;
 
-    // 中分類が選ばれているときは、中分類を優先して絞る
     if (selectedM) {
-      if (safeText(item.category_m).trim() !== selectedM) {
+      if (itemCategoryM !== selectedM) {
         return false;
       }
     } else {
-      // 中分類が未選択のときだけ大分類タブで絞る
-      if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
+      if (activeMainTab !== 'all' && itemCategoryL !== activeMainTab) {
         return false;
       }
     }
@@ -2284,8 +2290,12 @@ function refreshMiddleFilterOptions() {
     return true;
   });
 
+  console.log('filtered count =', filteredItems.length);
+  console.log('filtered items =', filteredItems);
+
   renderItems();
 }
+
 
     function renderItems() {
       if (!filteredItems.length) {
