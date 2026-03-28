@@ -2277,36 +2277,35 @@ function refreshMiddleFilterOptions() {
       els.modalBody.innerHTML = '';
     }
 
- function filterItems() {
+function filterItems() {
   const q = safeText(els.searchInput.value).trim().toLowerCase();
   const selectedM = safeText(els.filterCategoryM.value).trim();
 
   filteredItems = allItems.filter((item) => {
     const qty = Number(item.qty || 0);
 
-    if (qty <= 0) {
+    const itemL = safeText(item.category_l).trim();
+    const itemM = safeText(item.category_m).trim();
+    const itemS = safeText(item.category_s).trim();
+
+    if (qty <= 0) return false;
+
+    if (activeMainTab !== 'all' && itemL !== activeMainTab) {
       return false;
     }
 
-    if (activeMainTab !== 'all' && safeText(item.category_l).trim() !== activeMainTab) {
+    // 中分類フィルタ
+    // 旧データや登録揺れ対策で category_m / category_s の両方を見る
+    if (selectedM && itemM !== selectedM && itemS !== selectedM) {
       return false;
-    }
-
-    if (selectedM) {
-      const itemM = safeText(item.category_m).trim();
-      const itemS = safeText(item.category_s).trim();
-
-      if (itemM !== selectedM && itemS !== selectedM) {
-        return false;
-      }
     }
 
     if (q) {
       const hay = [
         item.name,
-        item.category_l,
-        item.category_m,
-        item.category_s,
+        itemL,
+        itemM,
+        itemS,
         item.location,
         item.status
       ].join(' ').toLowerCase();
@@ -2319,7 +2318,6 @@ function refreshMiddleFilterOptions() {
 
   renderItems();
 }
-
     function renderItems() {
       if (!filteredItems.length) {
         els.itemsContainer.innerHTML = '<div class="empty">条件に合う在庫がありません。</div>';
