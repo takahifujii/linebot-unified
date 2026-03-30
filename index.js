@@ -2195,6 +2195,7 @@ filterCategoryM: document.getElementById('filterCategoryM'),
       console.log('tab clicked =', activeMainTab);
 
       els.filterCategoryM.value = '';
+       renderMainTabs();
       refreshMiddleFilterOptions();
       filterItems();
     });
