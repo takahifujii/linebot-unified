@@ -2178,7 +2178,7 @@ filterCategoryM: document.getElementById('filterCategoryM'),
       updateLocationOtherVisibility();
     }
 
-  function renderMainTabs() {
+ function renderMainTabs() {
   const tabs = ['all', ...getLargeNames()];
   let html = '';
 
@@ -2222,39 +2222,6 @@ function refreshMiddleFilterOptions() {
     els.filterCategoryM.value = '';
   }
 }
-
-  console.log('middleList =', middleList);
-
-  setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
-
-  if (middleList.includes(currentSelectedM)) {
-    els.filterCategoryM.value = currentSelectedM;
-  } else {
-    els.filterCategoryM.value = '';
-  }
-}
-
-
-  console.log('middleList =', middleList);
-
-  setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
-
-  if (middleList.includes(currentSelectedM)) {
-    els.filterCategoryM.value = currentSelectedM;
-  } else {
-    els.filterCategoryM.value = '';
-  }
-}
-
-  setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
-
-  if (middleList.includes(currentSelectedM)) {
-    els.filterCategoryM.value = currentSelectedM;
-  } else {
-    els.filterCategoryM.value = '';
-  }
-}
-
     function showScreen(name) {
       els.screenList.classList.remove('active');
       els.screenCreate.classList.remove('active');
