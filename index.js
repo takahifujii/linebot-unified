@@ -1313,6 +1313,17 @@ app.get('/inventory', (req, res) => {
       outline:none;
       appearance:none;
     }
+    #filterCategoryM{
+  font-size:15px !important;
+  font-weight:700;
+  padding:10px 16px !important;
+  border-radius:999px !important;
+  min-height:44px;
+}
+
+#middleFilterWrap{
+  margin-bottom:10px !important;
+}
     .input::placeholder{
       color:#98a6c2;
     }
