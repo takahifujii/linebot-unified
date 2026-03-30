@@ -1137,6 +1137,18 @@ app.get('/inventory', (req, res) => {
       white-space:nowrap;
       cursor:pointer;
     }
+    .middle-select{
+  font-size:15px;
+  font-weight:700;
+  padding:10px 14px;
+  border-radius:999px;
+  min-height:auto;
+}
+
+#middleFilterWrap{
+  margin-bottom:10px !important;
+}
+
     .tab.active{
       background:var(--accent);
       color:#fff;
@@ -1541,7 +1553,7 @@ app.get('/inventory', (req, res) => {
 </div>
 
 <div id="middleFilterWrap" style="margin-bottom:14px; display:none;">
-  <select id="filterCategoryM" class="select">
+  <select id="filterCategoryM" class="select middle-select">
     <option value="">中分類で絞り込み</option>
   </select>
 </div>
