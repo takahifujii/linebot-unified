@@ -2260,6 +2260,19 @@ function refreshMiddleFilterOptions() {
       els.modalBody.innerHTML = '';
     }
 
+function openImagePreview(src, title) {
+  let html = '';
+  html += '<div style="text-align:center;">';
+  html += '<img src="' + escapeHtml(src) + '" alt="' + escapeHtml(title || '') + '" ';
+  html += 'style="max-width:100%; max-height:75vh; border-radius:16px; object-fit:contain;" />';
+  if (title) {
+    html += '<div style="margin-top:12px; font-size:14px; color:#aab4cc;">' + escapeHtml(title) + '</div>';
+  }
+  html += '</div>';
+
+  openModal('写真プレビュー', html);
+}
+
 function filterItems() {
   const q = safeText(els.searchInput.value).trim().toLowerCase();
   const selectedM = safeText(els.filterCategoryM.value).trim();
@@ -2321,18 +2334,26 @@ function filterItems() {
           const c1 = escapeHtml(cands[1] || '');
           const c2 = escapeHtml(cands[2] || '');
 
-          thumbHtml = '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
-            ' onerror="if(!this.dataset.f1 && \\''
-            + c1 +
-            '\\'){this.dataset.f1=\\'1\\';this.src=\\'' +
-            c1 +
-            '\\';return;} if(!this.dataset.f2 && \\''
-            + c2 +
-            '\\'){this.dataset.f2=\\'1\\';this.src=\\'' +
-            c2 +
-            '\\';return;} this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
-            ' />';
-        }
+         thumbHtml =
+  '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
+  ' style="cursor:pointer;"' +
+  ' onclick="openImagePreview(\\'' + c0 + '\\', \\''
+  + escapeHtml(item.name || '') +
+  '\\')"' +
+  ' onerror="if(!this.dataset.f1 && \\''
+  + c1 +
+  '\\'){this.dataset.f1=\\'1\\';this.src=\\'' +
+  c1 +
+  '\\';this.setAttribute(\\'onclick\\', \\'openImagePreview(\\\\\\'' + c1 + '\\\\\\', \\\\\\''
+  + escapeHtml(item.name || '') +
+  '\\\\\\')\\');return;} if(!this.dataset.f2 && \\''
+  + c2 +
+  '\\'){this.dataset.f2=\\'1\\';this.src=\\'' +
+  c2 +
+  '\\';this.setAttribute(\\'onclick\\', \\'openImagePreview(\\\\\\'' + c2 + '\\\\\\', \\\\\\''
+  + escapeHtml(item.name || '') +
+  '\\\\\\')\\');return;} this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
+  ' />';
 
         const chipValues = [item.category_l, item.category_m, item.category_s, item.location]
           .map(v => safeText(v).trim())
@@ -2779,6 +2800,7 @@ async function submitEdit(itemId) {
     window.submitConsume = submitConsume;
     window.editItem = editItem;
     window.submitEdit = submitEdit;
+    window.openImagePreview = openImagePreview;
     window.openCameraFromModal = function() {
       closeModal();
       els.cameraInput.click();
