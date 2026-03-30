@@ -2316,73 +2316,74 @@ function filterItems() {
   renderItems();
 }
 
-    function renderItems() {
-      if (!filteredItems.length) {
-        els.itemsContainer.innerHTML = '<div class="empty">条件に合う在庫がありません。</div>';
-        return;
-      }
+function renderItems() {
+  if (!filteredItems.length) {
+    els.itemsContainer.innerHTML = '<div class="empty">条件に合う在庫がありません。</div>';
+    return;
+  }
 
-      let html = '';
+  let html = '';
 
-      filteredItems.forEach((item) => {
-        const photos = getPhotoUrls(item);
-        let thumbHtml = '画像なし';
+  filteredItems.forEach((item) => {
+    const photos = getPhotoUrls(item);
+    let thumbHtml = '画像なし';
 
-        if (photos.length > 0) {
-          const cands = buildDriveImageCandidates(photos[0]);
-          const c0 = escapeHtml(cands[0] || '');
-          const c1 = escapeHtml(cands[1] || '');
-          const c2 = escapeHtml(cands[2] || '');
+    if (photos.length > 0) {
+      const cands = buildDriveImageCandidates(photos[0]);
+      const c0 = escapeHtml(cands[0] || '');
+      const c1 = escapeHtml(cands[1] || '');
+      const c2 = escapeHtml(cands[2] || '');
 
-         thumbHtml =
-  '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
-  ' style="cursor:pointer;"' +
-  ' onclick="openImagePreview(\\'' + c0 + '\\', \\''
-  + escapeHtml(item.name || '') +
-  '\\')"' +
-  ' onerror="if(!this.dataset.f1 && \\''
-  + c1 +
-  '\\'){this.dataset.f1=\\'1\\';this.src=\\'' +
-  c1 +
-  '\\';this.setAttribute(\\'onclick\\', \\'openImagePreview(\\\\\\'' + c1 + '\\\\\\', \\\\\\''
-  + escapeHtml(item.name || '') +
-  '\\\\\\')\\');return;} if(!this.dataset.f2 && \\''
-  + c2 +
-  '\\'){this.dataset.f2=\\'1\\';this.src=\\'' +
-  c2 +
-  '\\';this.setAttribute(\\'onclick\\', \\'openImagePreview(\\\\\\'' + c2 + '\\\\\\', \\\\\\''
-  + escapeHtml(item.name || '') +
-  '\\\\\\')\\');return;} this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
-  ' />';
-
-        const chipValues = [item.category_l, item.category_m, item.category_s, item.location]
-          .map(v => safeText(v).trim())
-          .filter(Boolean);
-
-        let chipsHtml = '';
-        chipValues.forEach((v) => {
-          chipsHtml += '<span class="chip">' + escapeHtml(v) + '</span>';
-        });
-
-        html += '<div class="item-card">';
-        html +=   '<div class="thumb-box">' + thumbHtml + '</div>';
-        html +=   '<div class="item-main">';
-        html +=     '<div class="item-name">' + escapeHtml(item.name || '') + '</div>';
-        html +=     '<div class="item-meta">状態: ' + escapeHtml(item.status || '') + '</div>';
-        html +=     '<div class="chips">' + chipsHtml + '</div>';
-        html +=     '<div class="qty-row">';
-        html +=       '<div class="qty-box"><span class="qty-num">' + escapeHtml(item.qty || 0) + '</span><span class="qty-unit">' + escapeHtml(item.unit || '') + '</span></div>';
-        html +=       '<div class="item-actions">';
-        html +=         '<button class="btn btn-secondary" onclick="editItem(\\'' + escapeHtml(item.item_id) + '\\')">編集</button>';
-        html +=         '<button class="btn btn-primary" onclick="consumeItem(\\'' + escapeHtml(item.item_id) + '\\',\\'' + escapeHtml(item.name || '') + '\\')">消費</button>';
-        html +=       '</div>';
-        html +=     '</div>';
-        html +=   '</div>';
-        html += '</div>';
-      });
-
-      els.itemsContainer.innerHTML = html;
+      thumbHtml =
+        '<img src="' + c0 + '" alt="' + escapeHtml(item.name || '') + '"' +
+        ' style="cursor:pointer;"' +
+        ' onclick="openImagePreview(\\'' + c0 + '\\', \\''
+        + escapeHtml(item.name || '') +
+        '\\')"' +
+        ' onerror="if(!this.dataset.f1 && \\''
+        + c1 +
+        '\\'){this.dataset.f1=\\'1\\';this.src=\\'' +
+        c1 +
+        '\\';this.setAttribute(\\'onclick\\', \\'openImagePreview(\\\\\\'' + c1 + '\\\\\\', \\\\\\''
+        + escapeHtml(item.name || '') +
+        '\\\\\\')\\');return;} if(!this.dataset.f2 && \\''
+        + c2 +
+        '\\'){this.dataset.f2=\\'1\\';this.src=\\'' +
+        c2 +
+        '\\';this.setAttribute(\\'onclick\\', \\'openImagePreview(\\\\\\'' + c2 + '\\\\\\', \\\\\\''
+        + escapeHtml(item.name || '') +
+        '\\\\\\')\\');return;} this.onerror=null; this.outerHTML=\\'<span>画像なし</span>\\';"' +
+        ' />';
     }
+
+    const chipValues = [item.category_l, item.category_m, item.category_s, item.location]
+      .map(v => safeText(v).trim())
+      .filter(Boolean);
+
+    let chipsHtml = '';
+    chipValues.forEach((v) => {
+      chipsHtml += '<span class="chip">' + escapeHtml(v) + '</span>';
+    });
+
+    html += '<div class="item-card">';
+    html +=   '<div class="thumb-box">' + thumbHtml + '</div>';
+    html +=   '<div class="item-main">';
+    html +=     '<div class="item-name">' + escapeHtml(item.name || '') + '</div>';
+    html +=     '<div class="item-meta">状態: ' + escapeHtml(item.status || '') + '</div>';
+    html +=     '<div class="chips">' + chipsHtml + '</div>';
+    html +=     '<div class="qty-row">';
+    html +=       '<div class="qty-box"><span class="qty-num">' + escapeHtml(item.qty || 0) + '</span><span class="qty-unit">' + escapeHtml(item.unit || '') + '</span></div>';
+    html +=       '<div class="item-actions">';
+    html +=         '<button class="btn btn-secondary" onclick="editItem(\\'' + escapeHtml(item.item_id) + '\\')">編集</button>';
+    html +=         '<button class="btn btn-primary" onclick="consumeItem(\\'' + escapeHtml(item.item_id) + '\\',\\'' + escapeHtml(item.name || '') + '\\')">消費</button>';
+    html +=       '</div>';
+    html +=     '</div>';
+    html +=   '</div>';
+    html += '</div>';
+  });
+
+  els.itemsContainer.innerHTML = html;
+}
 
     function renderPhotoPreview() {
       if (!selectedPhotoBase64) {
