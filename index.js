@@ -2223,6 +2223,17 @@ function refreshMiddleFilterOptions() {
   }
 }
 
+  console.log('middleList =', middleList);
+
+  setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
+
+  if (middleList.includes(currentSelectedM)) {
+    els.filterCategoryM.value = currentSelectedM;
+  } else {
+    els.filterCategoryM.value = '';
+  }
+}
+
 
   console.log('middleList =', middleList);
 
