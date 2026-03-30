@@ -2188,17 +2188,19 @@ filterCategoryM: document.getElementById('filterCategoryM'),
   });
 
   els.mainTabs.innerHTML = html;
-  
-els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    activeMainTab = btn.getAttribute('data-key');
-    console.log('tab clicked =', activeMainTab);
 
-    els.filterCategoryM.value = '';
-    refreshMiddleFilterOptions();
-    filterItems();
+  els.mainTabs.querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeMainTab = btn.getAttribute('data-key');
+      console.log('tab clicked =', activeMainTab);
+
+      els.filterCategoryM.value = '';
+      refreshMiddleFilterOptions();
+      filterItems();
+    });
   });
-});
+}
+
 function refreshMiddleFilterOptions() {
   let middleList = [];
   const currentSelectedM = safeText(els.filterCategoryM.value).trim();
@@ -2210,6 +2212,8 @@ function refreshMiddleFilterOptions() {
     els.middleFilterWrap.style.display = 'none';
   }
 
+  console.log('middleList =', middleList);
+
   setSelectOptions(els.filterCategoryM, middleList, '中分類で絞り込み');
 
   if (middleList.includes(currentSelectedM)) {
@@ -2218,6 +2222,7 @@ function refreshMiddleFilterOptions() {
     els.filterCategoryM.value = '';
   }
 }
+
 
   console.log('middleList =', middleList);
 
@@ -2283,7 +2288,6 @@ function filterItems() {
 
   filteredItems = allItems.filter((item) => {
     const qty = Number(item.qty || 0);
-
     const itemL = safeText(item.category_l).trim();
     const itemM = safeText(item.category_m).trim();
     const itemS = safeText(item.category_s).trim();
@@ -2294,9 +2298,7 @@ function filterItems() {
       return false;
     }
 
-    // 中分類フィルタ
-    // 旧データや登録揺れ対策で category_m / category_s の両方を見る
-    if (selectedM && itemM !== selectedM && itemS !== selectedM) {
+    if (selectedM && itemM !== selectedM) {
       return false;
     }
 
@@ -2316,8 +2318,13 @@ function filterItems() {
     return true;
   });
 
+  console.log('activeMainTab =', activeMainTab);
+  console.log('selectedM =', selectedM);
+  console.log('filtered count =', filteredItems.length);
+
   renderItems();
 }
+
     function renderItems() {
       if (!filteredItems.length) {
         els.itemsContainer.innerHTML = '<div class="empty">条件に合う在庫がありません。</div>';
