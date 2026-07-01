@@ -95,20 +95,21 @@ async function callInventoryPost(action, payload = {}) {
   requireEnv('INVENTORY_API_URL', INVENTORY_API_URL);
   requireEnv('INVENTORY_API_TOKEN', INVENTORY_API_TOKEN);
 
-  const response = await axios.post(
-    INVENTORY_API_URL,
-    {
-      token: INVENTORY_API_TOKEN,
-      action,
-      payload,
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      timeout: 30000,
-    }
-  );
+  // GASはContent-Type: text/plainでないとPOSTボディを正しく読めない
+  // また302リダイレクトを返すため、手動で追う必要がある
+  const bodyStr = JSON.stringify({ token: INVENTORY_API_TOKEN, action, payload });
+
+  let response = await axios.post(INVENTORY_API_URL, bodyStr, {
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    timeout: 30000,
+    maxRedirects: 0,
+    validateStatus: (s) => s < 400 || s === 302,
+  });
+
+  // GASが302リダイレクトを返した場合、Location先にGETする
+  if (response.status === 302 && response.headers.location) {
+    response = await axios.get(response.headers.location, { timeout: 30000 });
+  }
 
   return response.data;
 }
